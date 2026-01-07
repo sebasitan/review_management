@@ -112,13 +112,37 @@ export default function OnboardingPage() {
                         )}
 
                         <button
-                            onClick={() => selectedBusiness ? setStep(2) : searchBusinesses()}
+                            onClick={() => {
+                                if (selectedBusiness) {
+                                    setStep(2);
+                                } else if (query) {
+                                    // Manual entry fallback
+                                    setSelectedBusiness({
+                                        name: query,
+                                        placeId: 'manual_' + Math.random().toString(36).substr(2, 9),
+                                        address: 'Manual Entry Location',
+                                        rating: 5.0
+                                    });
+                                    setStep(2);
+                                } else {
+                                    searchBusinesses();
+                                }
+                            }}
                             className={styles.primaryBtn}
                             style={{ width: '100%' }}
-                            disabled={loading}
+                            disabled={loading && !query}
                         >
-                            {selectedBusiness ? 'Looks Good, Continue' : 'Search Business'}
+                            {selectedBusiness ? 'Confirm Selection' : query ? 'Continue with this name' : 'Search Business'}
                         </button>
+
+                        {query && !loading && searchResults.length === 0 && (
+                            <p style={{ marginTop: '16px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                                Business not found? <span style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }} onClick={() => {
+                                    setSelectedBusiness({ name: query, placeId: 'manual_loc', address: 'Custom Location', rating: 5.0 });
+                                    setStep(2);
+                                }}>Enter details manually</span>
+                            </p>
+                        )}
                     </div>
                 )}
 
