@@ -19,34 +19,44 @@ export default function DashboardPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [reviews, setReviews] = useState<any[]>([]);
+    const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [selectedReview, setSelectedReview] = useState<any>(null); // For AI
     const [manualReview, setManualReview] = useState<any>(null);   // For Manual
 
     useEffect(() => {
-        const fetchReviews = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch('/api/reviews');
-                const data = await res.json();
+                const [reviewsRes, statsRes] = await Promise.all([
+                    fetch('/api/reviews'),
+                    fetch('/api/stats')
+                ]);
 
-                if (Array.isArray(data) && data.length === 0) {
-                    // No business or reviews found, redirect to onboarding if needed
-                    // Or show empty state
-                    console.log("No reviews found, user might need onboarding");
-                } else {
-                    setReviews(data);
+                const reviewsData = await reviewsRes.json();
+                const statsData = await statsRes.json();
+
+                if (Array.isArray(reviewsData)) {
+                    setReviews(reviewsData);
                 }
+                setStats(statsData);
             } catch (error) {
-                console.error("Failed to fetch reviews:", error);
+                console.error("Failed to fetch dashboard data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
         if (status === 'authenticated') {
-            fetchReviews();
+            fetchData();
         }
     }, [status]);
+
+    const dashboardStats = stats ? [
+        { label: "Average Rating", value: stats.avgRating, trend: "+0.2", trendUp: true, icon: "⭐" },
+        { label: "Total Reviews", value: stats.totalReviews, trend: "+12%", trendUp: true, icon: "💬" },
+        { label: "Response Rate", value: stats.responseRate, trend: "+2.1%", trendUp: true, icon: "⚡" },
+        { label: "Sentiment Score", value: stats.sentimentScore, trend: "+5", trendUp: true, icon: "😊" },
+    ] : mockStats;
 
     const handlePostResponse = (response: string) => {
         const targetId = selectedReview?.id || manualReview?.id;
@@ -83,7 +93,7 @@ export default function DashboardPage() {
     return (
         <div>
             <div className={styles.grid}>
-                {mockStats.map((stat, i) => (
+                {dashboardStats.map((stat, i) => (
                     <div key={i} className={`${styles.statCard} glass`}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                             <span style={{ fontSize: '1.5rem' }}>{stat.icon}</span>

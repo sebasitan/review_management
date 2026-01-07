@@ -17,18 +17,25 @@ export default function AIResponseModal({ review, onClose, onPost }: AIResponseM
   const [response, setResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateResponse = () => {
+  const generateResponse = async () => {
     setIsGenerating(true);
-    // Simulating AI generation
-    setTimeout(() => {
-      const responses = [
-        `Dear ${review.author}, thank you so much for your ${review.rating}-star review! We're thrilled to hear you had a great experience with our team. We look forward to seeing you again soon!`,
-        `Hi ${review.author}, we really appreciate your feedback. It was a pleasure serving you, and we're glad you enjoyed the service. Thanks for recommending us!`,
-        `Thank you for the wonderful feedback, ${review.author}! We strive for excellence, and it's great to see that reflected in your experience. Hope to see you back soon.`
-      ];
-      setResponse(responses[Math.floor(Math.random() * responses.length)]);
+    try {
+      const res = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reviewContent: review.content,
+          rating: review.rating,
+          authorName: review.author
+        })
+      });
+      const data = await res.json();
+      setResponse(data.response);
+    } catch (error) {
+      console.error("AI Generation failed:", error);
+    } finally {
       setIsGenerating(false);
-    }, 1500);
+    }
   };
 
   return (

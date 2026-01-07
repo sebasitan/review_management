@@ -1,43 +1,83 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from "../dashboard.module.css";
 import AIResponseModal from "@/components/dashboard/AIResponseModal";
 import ManualReplyModal from "@/components/dashboard/ManualReplyModal";
 
-const allReviews = [
-    { id: "1", author: "James Wilson", rating: 5, content: "Absolutely amazing experience! The staff was incredibly helpful and the service was top-notch. Highly recommend to everyone looking for quality.", platform: "Google", date: "2 hours ago", status: "replied", sentiment: 'positive' },
-    { id: "2", author: "Sarah Jenkins", rating: 4, content: "Great service overall. Had a minor delay with my order but the team handled it professionally. Will definitely come back again.", platform: "Yelp", date: "5 hours ago", status: "pending", sentiment: 'neutral' },
-    { id: "3", author: "Michael Chen", rating: 5, content: "The best in the business. Very professional and detail-oriented. Worth every penny spent here.", platform: "Facebook", date: "Yesterday", status: "replied", sentiment: 'positive' },
-    { id: "4", author: "Robert Taylor", rating: 2, content: "Service was slow and the prices are quite high. Not sure if I will return.", platform: "Google", date: "2 days ago", status: "pending", sentiment: 'negative' },
-    { id: "5", author: "Emily Davis", rating: 4, content: "Love the atmosphere and the selection of products. Definitely a 4.5 star experience.", platform: "Google", date: "3 days ago", status: "replied", sentiment: 'positive' },
-];
-
 export default function ReviewsPage() {
     const [filter, setFilter] = useState('all');
-    const [reviews, setReviews] = useState(allReviews);
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedReview, setSelectedReview] = useState<any>(null); // AI
     const [manualReview, setManualReview] = useState<any>(null);   // Manual
+
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                const res = await fetch('/api/reviews');
+                const data = await res.json();
+
+                // Map DB schema to UI schema
+                const mappedReviews = data.map((r: any) => ({
+                    id: r.id,
+                    author: r.authorName,
+                    rating: r.rating,
+                    content: r.content,
+                    platform: r.platform.charAt(0) + r.platform.slice(1).toLowerCase(),
+                    date: new Date(r.publishDate).toLocaleDateString(),
+                    status: r.status === 'REPLIED' ? 'replied' : 'pending',
+                    sentiment: r.sentiment > 0 ? 'positive' : r.sentiment < 0 ? 'negative' : 'neutral'
+                }));
+
+                setReviews(mappedReviews);
+            } catch (error) {
+                console.error("Failed to fetch reviews:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchReviews();
+    }, []);
 
     const filteredReviews = reviews.filter(r => {
         if (filter === 'all') return true;
         if (filter === 'pending') return r.status === 'pending';
         if (filter === 'negative') return r.rating <= 3;
+        if (filter === 'google') return r.platform === 'Google';
+        if (filter === 'yelp') return r.platform === 'Yelp';
+        if (filter === 'facebook') return r.platform === 'Facebook';
         return true;
     });
 
-    const handlePostResponse = (response: string) => {
-        // Update either AI or Manual target
+    const handlePostResponse = async (response: string) => {
         const targetId = selectedReview?.id || manualReview?.id;
         if (!targetId) return;
 
-        setReviews(prev => prev.map(r =>
-            r.id === targetId ? { ...r, status: 'replied' } : r
-        ));
-        setSelectedReview(null);
-        setManualReview(null);
-        console.log(`Posted response for review ${targetId}: ${response}`);
+        try {
+            // Optimistically update UI
+            setReviews(prev => prev.map(r =>
+                r.id === targetId ? { ...r, status: 'replied' } : r
+            ));
+            setSelectedReview(null);
+            setManualReview(null);
+
+            // In a real app, call an API to save the reply
+            // await fetch(`/api/reviews/${targetId}/reply`, { method: 'POST', body: JSON.stringify({ response }) });
+        } catch (error) {
+            console.error("Failed to post response:", error);
+        }
     };
+
+    if (loading) return (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+            <div className="spinner" style={{
+                width: '32px', height: '32px', border: '3px solid var(--primary)',
+                borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite'
+            }}></div>
+        </div>
+    );
 
     return (
         <div>

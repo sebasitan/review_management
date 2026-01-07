@@ -13,18 +13,58 @@ export default function RequestsPage() {
     const [method, setMethod] = useState<'email' | 'sms'>('email');
     const [selectedTemplate, setSelectedTemplate] = useState(templates[0]);
     const [recipient, setRecipient] = useState('');
+    const [isSending, setIsSending] = useState(false);
+    const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+
+    const handleSendRequest = async () => {
+        if (!recipient) return;
+        setIsSending(true);
+        setStatus(null);
+
+        try {
+            const res = await fetch('/api/requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recipient,
+                    method,
+                    content: selectedTemplate.content
+                })
+            });
+
+            if (res.ok) {
+                setStatus({ type: 'success', msg: 'Request sent successfully!' });
+                setRecipient('');
+            } else {
+                throw new Error('Failed to send');
+            }
+        } catch (error) {
+            setStatus({ type: 'error', msg: 'Failed to send request. Please try again.' });
+        } finally {
+            setIsSending(false);
+        }
+    };
 
     return (
         <div>
-
-
             <div className={styles.contentGrid} style={{ gridTemplateColumns: '1.2fr 1fr' }}>
                 <section className={`${styles.statCard} glass`} style={{ padding: '32px' }}>
                     <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '24px' }}>Compose Request</h2>
 
+                    {status && (
+                        <div style={{
+                            padding: '12px 16px', borderRadius: '12px', marginBottom: '24px',
+                            background: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                            color: status.type === 'success' ? 'var(--success)' : 'var(--error)',
+                            fontSize: '0.875rem', fontWeight: 500
+                        }}>
+                            {status.type === 'success' ? '✅' : '❌'} {status.msg}
+                        </div>
+                    )}
+
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(0,0,0,0.03)', padding: '4px', borderRadius: '10px', width: 'fit-content' }}>
                         <button
-                            onClick={() => setMethod('email')}
+                            onClick={() => { setMethod('email'); setStatus(null); }}
                             style={{
                                 padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
                                 background: method === 'email' ? 'white' : 'transparent',
@@ -35,7 +75,7 @@ export default function RequestsPage() {
                             📧 Email
                         </button>
                         <button
-                            onClick={() => setMethod('sms')}
+                            onClick={() => { setMethod('sms'); setStatus(null); }}
                             style={{
                                 padding: '8px 16px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
                                 background: method === 'sms' ? 'white' : 'transparent',
@@ -95,8 +135,13 @@ export default function RequestsPage() {
                         />
                     </div>
 
-                    <button className={styles.primaryBtn} style={{ width: '100%' }}>
-                        Send Review Request
+                    <button
+                        onClick={handleSendRequest}
+                        disabled={isSending || !recipient}
+                        className={styles.primaryBtn}
+                        style={{ width: '100%', opacity: isSending || !recipient ? 0.7 : 1 }}
+                    >
+                        {isSending ? 'Sending...' : 'Send Review Request'}
                     </button>
                 </section>
 
