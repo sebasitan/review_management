@@ -22,7 +22,7 @@ A production-ready platform for SMBs to manage their online reputation, automate
 ## Phase 2: Core Features (MVP)
 - [x] Dashboard: Overview of reputation stats (Mockup)
 - [x] User Login & Auth Guard
-- [ ] Review Monitoring: Integration with Google/Yelp (API)
+- [/] Review Monitoring: Integration with Google/Yelp (API Started)
 - [/] AI Response Generator: Automated draft suggestions (UI Ready)
 - [ ] Review Request System: Email/SMS templates
 
