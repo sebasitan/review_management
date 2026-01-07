@@ -12,13 +12,26 @@ export default function OnboardingPage() {
     const [query, setQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
+    const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
     const router = useRouter();
+
+    useEffect(() => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            });
+        }
+    }, []);
 
     const searchBusinesses = async () => {
         if (!query) return;
         setLoading(true);
         try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            let url = `/api/search?q=${encodeURIComponent(query)}`;
+            if (location) {
+                url += `&lat=${location.lat}&lng=${location.lng}`;
+            }
+            const res = await fetch(url);
             const data = await res.json();
             setSearchResults(data);
         } catch (error) {
