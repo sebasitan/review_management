@@ -13,8 +13,8 @@ export default function Footer() {
                 <div>
                     <h4 style={{ fontWeight: 700, marginBottom: '24px' }}>Product</h4>
                     <ul style={{ listStyle: 'none', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Features</a></li>
-                        <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Pricing</a></li>
+                        <li><a href="#features" style={{ color: 'inherit', textDecoration: 'none' }}>Features</a></li>
+                        <li><a href="#pricing" style={{ color: 'inherit', textDecoration: 'none' }}>Pricing</a></li>
                         <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Integrations</a></li>
                         <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Changelog</a></li>
                     </ul>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./landing.module.css";
 import LandingNav from "@/components/landing/LandingNav";
 import HeroSection from "@/components/landing/HeroSection";
@@ -17,13 +18,13 @@ export default function Home() {
         <p style={{ fontSize: '1.25rem', opacity: 0.9, marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>
           Join 500+ businesses using AI to get more 5-star reviews and grow closer to their customers.
         </p>
-        <button style={{
+        <Link href="/login" style={{
           padding: '16px 40px', background: 'white', color: 'var(--primary)',
           borderRadius: '100px', fontWeight: 700, fontSize: '1.125rem', border: 'none', cursor: 'pointer',
-          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)'
+          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)', textDecoration: 'none', display: 'inline-block'
         }}>
           Start Your Free Trial
-        </button>
+        </Link>
       </div>
       <Footer />
     </div>

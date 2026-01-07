@@ -24,9 +24,9 @@ export default function PricingSection() {
                         <li className={styles.checkItem}><span className={styles.checkIcon}>✓</span> Basic Analytics</li>
                     </ul>
 
-                    <Link href="/dashboard" style={{
+                    <Link href="/login" style={{
                         width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid var(--primary)',
-                        color: 'var(--primary)', fontWeight: 600, textAlign: 'center'
+                        color: 'var(--primary)', fontWeight: 600, textAlign: 'center', textDecoration: 'none'
                     }}>Start Free Trial</Link>
                 </div>
 
@@ -50,9 +50,10 @@ export default function PricingSection() {
                         <li className={styles.checkItem}><span className={styles.checkIcon}>✓</span> Competitor Tracking</li>
                     </ul>
 
-                    <Link href="/dashboard" style={{
+                    <Link href="/login" style={{
                         width: '100%', padding: '16px', borderRadius: '12px', background: 'var(--primary)',
-                        color: 'white', fontWeight: 600, textAlign: 'center', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+                        color: 'white', fontWeight: 600, textAlign: 'center', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                        textDecoration: 'none'
                     }}>Get Started</Link>
                 </div>
             </div>

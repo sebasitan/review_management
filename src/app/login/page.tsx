@@ -42,7 +42,7 @@ export default function LoginPage() {
                 <div className={styles.divider}>or</div>
 
                 <p className={styles.footer}>
-                    Don&apos;t have an account? <a href="#">Get Started</a>
+                    Don&apos;t have an account? <span className={styles.link} onClick={handleGoogleSignIn} style={{ cursor: 'pointer', color: 'var(--primary)', fontWeight: 600 }}>Get Started</span>
                 </p>
                 <p style={{ marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     By clicking continue, you agree to our <br />

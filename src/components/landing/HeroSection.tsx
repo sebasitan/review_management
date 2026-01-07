@@ -22,20 +22,22 @@ export default function HeroSection() {
                 </p>
 
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <Link href="/dashboard" style={{
+                    <Link href="/login" style={{
                         padding: '16px 32px', background: 'var(--primary)', color: 'white',
                         borderRadius: '12px', fontWeight: 600, fontSize: '1.125rem',
-                        boxShadow: '0 10px 20px -5px rgba(99, 102, 241, 0.4)'
+                        boxShadow: '0 10px 20px -5px rgba(99, 102, 241, 0.4)',
+                        textDecoration: 'none'
                     }}>
                         Get Started Free
                     </Link>
-                    <button style={{
+                    <a href="#pricing" style={{
                         padding: '16px 32px', background: 'white', color: 'var(--text-primary)',
                         borderRadius: '12px', fontWeight: 600, fontSize: '1.125rem',
-                        border: '1px solid var(--card-border)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                        border: '1px solid var(--card-border)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                        textDecoration: 'none'
                     }}>
                         View Live Demo
-                    </button>
+                    </a>
                 </div>
 
                 <div className={styles.trustBadge}>

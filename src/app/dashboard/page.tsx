@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import styles from "./dashboard.module.css";
 import AIResponseModal from "@/components/dashboard/AIResponseModal";
 import ManualReplyModal from "@/components/dashboard/ManualReplyModal";
@@ -12,53 +15,70 @@ const mockStats = [
     { label: "Sentiment Score", value: "92/100", trend: "+5", trendUp: true, icon: "😊" },
 ];
 
-const initialReviews = [
-    {
-        id: "1",
-        author: "James Wilson",
-        rating: 5,
-        content: "Absolutely amazing experience! The staff was incredibly helpful and the service was top-notch. Highly recommend to everyone looking for quality.",
-        platform: "Google",
-        date: "2 hours ago",
-        status: "replied",
-    },
-    {
-        id: "2",
-        author: "Sarah Jenkins",
-        rating: 4,
-        content: "Great service overall. Had a minor delay with my order but the team handled it professionally. Will definitely come back again.",
-        platform: "Yelp",
-        date: "5 hours ago",
-        status: "pending",
-    },
-    {
-        id: "3",
-        author: "Michael Chen",
-        rating: 5,
-        content: "The best in the business. Very professional and detail-oriented. Worth every penny spent here.",
-        platform: "Facebook",
-        date: "Yesterday",
-        status: "replied",
-    }
-];
-
 export default function DashboardPage() {
-    const [reviews, setReviews] = useState(initialReviews);
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedReview, setSelectedReview] = useState<any>(null); // For AI
     const [manualReview, setManualReview] = useState<any>(null);   // For Manual
 
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                const res = await fetch('/api/reviews');
+                const data = await res.json();
+
+                if (Array.isArray(data) && data.length === 0) {
+                    // No business or reviews found, redirect to onboarding if needed
+                    // Or show empty state
+                    console.log("No reviews found, user might need onboarding");
+                } else {
+                    setReviews(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch reviews:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (status === 'authenticated') {
+            fetchReviews();
+        }
+    }, [status]);
+
     const handlePostResponse = (response: string) => {
-        // Update either AI or Manual target
         const targetId = selectedReview?.id || manualReview?.id;
         if (!targetId) return;
 
         setReviews(prev => prev.map(r =>
-            r.id === targetId ? { ...r, status: 'replied' } : r
+            r.id === targetId ? { ...r, status: 'REPLIED' } : r
         ));
         setSelectedReview(null);
         setManualReview(null);
-        console.log(`Posted response for review ${targetId}: ${response}`);
     };
+
+    if (loading) return (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+            <div style={{ width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        </div>
+    );
+
+    if (reviews.length === 0) {
+        return (
+            <div className="glass" style={{ padding: '60px', textAlign: 'center', borderRadius: '24px' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '24px' }}>🔍</div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '16px' }}>No Business Connected</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px' }}>
+                    Connect your business to start monitoring reviews and generating AI responses.
+                </p>
+                <Link href="/onboarding" className={styles.primaryBtn} style={{ display: 'inline-block' }}>
+                    Connect My Business
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -89,12 +109,16 @@ export default function DashboardPage() {
                             <div key={review.id} className={styles.reviewCard}>
                                 <div className={styles.reviewHeader}>
                                     <div className={styles.authorInfo}>
-                                        <div className={styles.authorAvatar}>
-                                            {review.author.charAt(0)}
-                                        </div>
+                                        {review.authorImage ? (
+                                            <img src={review.authorImage} alt="" className={styles.authorAvatar} style={{ padding: 0 }} />
+                                        ) : (
+                                            <div className={styles.authorAvatar}>
+                                                {review.authorName.charAt(0)}
+                                            </div>
+                                        )}
                                         <div>
-                                            <div className={styles.authorName}>{review.author}</div>
-                                            <div className={styles.reviewMeta}>{review.platform} • {review.date}</div>
+                                            <div className={styles.authorName}>{review.authorName}</div>
+                                            <div className={styles.reviewMeta}>{review.platform} • {new Date(review.publishDate).toLocaleDateString()}</div>
                                         </div>
                                     </div>
                                     <div className={styles.rating}>
@@ -105,7 +129,7 @@ export default function DashboardPage() {
                                 </div>
                                 <p className={styles.reviewText}>{review.content}</p>
                                 <div className={styles.reviewFooter}>
-                                    {review.status === 'replied' ? (
+                                    {review.status === 'REPLIED' ? (
                                         <div className={styles.aiBadge}>
                                             <span>🤖</span> Replied
                                         </div>

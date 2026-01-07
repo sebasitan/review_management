@@ -20,12 +20,12 @@ export default function LandingNav() {
             </div>
 
             <div style={{ display: 'flex', gap: '16px' }}>
-                <Link href="/dashboard" style={{ fontWeight: 600, color: 'var(--text-primary)', padding: '10px 20px' }}>
+                <Link href="/login" style={{ fontWeight: 600, color: 'var(--text-primary)', padding: '10px 20px', textDecoration: 'none' }}>
                     Log in
                 </Link>
-                <Link href="/dashboard" style={{
+                <Link href="/login" style={{
                     background: 'var(--primary)', color: 'white', padding: '10px 24px',
-                    borderRadius: '100px', fontWeight: 600, transition: 'transform 0.2s'
+                    borderRadius: '100px', fontWeight: 600, transition: 'transform 0.2s', textDecoration: 'none'
                 }}>
                     Start Free Trial
                 </Link>

@@ -7,25 +7,39 @@ import { useRouter } from 'next/navigation';
 export default function OnboardingPage() {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [businessName, setBusinessName] = useState('');
     const router = useRouter();
 
-    const nextStep = () => {
-        setLoading(true);
-        setTimeout(() => {
-            setStep(step + 1);
-            setLoading(false);
-        }, 1000);
-    };
+    const handleNext = async () => {
+        if (step === 1) {
+            if (!businessName) return alert('Please enter a business name');
+            setStep(2);
+        } else if (step === 2) {
+            setStep(3);
+        } else if (step === 3) {
+            setLoading(true);
+            try {
+                const res = await fetch('/api/onboarding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ businessName }),
+                });
 
-    const finish = () => {
-        setLoading(true);
-        setTimeout(() => {
-            router.push('/dashboard');
-        }, 1500);
+                if (res.ok) {
+                    router.push('/dashboard');
+                } else {
+                    alert('Something went wrong. Please try again.');
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error(error);
+                setLoading(false);
+            }
+        }
     };
 
     return (
-        <div className={styles.main} style={{ background: 'var(--background)', justifyContent: 'center', alignItems: 'center' }}>
+        <div className={styles.main} style={{ background: 'var(--background)', justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
             <div className="glass" style={{ width: '100%', maxWidth: '500px', padding: '48px', borderRadius: '32px', textAlign: 'center' }}>
 
                 {step === 1 && (
@@ -36,17 +50,18 @@ export default function OnboardingPage() {
 
                         <input
                             type="text"
+                            value={businessName}
+                            onChange={(e) => setBusinessName(e.target.value)}
                             placeholder="e.g. Blue Coffee Roasters"
-                            style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid var(--card-border)', background: 'white', marginBottom: '24px', fontSize: '1rem' }}
+                            style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid var(--card-border)', background: 'white', marginBottom: '24px', fontSize: '1rem', color: 'black' }}
                         />
 
                         <button
-                            onClick={nextStep}
+                            onClick={handleNext}
                             className={styles.primaryBtn}
                             style={{ width: '100%' }}
-                            disabled={loading}
                         >
-                            {loading ? 'Searching...' : 'Continue'}
+                            Continue
                         </button>
                     </div>
                 )}
@@ -70,12 +85,11 @@ export default function OnboardingPage() {
                         </div>
 
                         <button
-                            onClick={nextStep}
+                            onClick={handleNext}
                             className={styles.primaryBtn}
                             style={{ width: '100%' }}
-                            disabled={loading}
                         >
-                            {loading ? 'Linking...' : 'Go to Dashboard Setup'}
+                            Go to Summary
                         </button>
                     </div>
                 )}
@@ -84,25 +98,25 @@ export default function OnboardingPage() {
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         <div style={{ fontSize: '3rem', marginBottom: '24px' }}>✨</div>
                         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>You're all set!</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We've successfully imported your last 100 reviews. Your AI assistant is ready to help you respond.</p>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We're ready to import reviews for <strong>{businessName}</strong>. Your AI assistant is ready to help you respond.</p>
 
                         <div style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '24px', borderRadius: '20px', marginBottom: '32px', textAlign: 'left' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                 <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Reviews Found:</span>
-                                <span style={{ fontWeight: 700 }}>1,284</span>
+                                <span style={{ fontWeight: 700 }}>3</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                 <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Avg. Rating:</span>
-                                <span style={{ fontWeight: 700, color: '#ffb700' }}>4.8 ★</span>
+                                <span style={{ fontWeight: 700, color: '#ffb700' }}>4.7 ★</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Pending Replies:</span>
-                                <span style={{ fontWeight: 700, color: 'var(--error)' }}>12</span>
+                                <span style={{ fontWeight: 700, color: 'var(--error)' }}>3</span>
                             </div>
                         </div>
 
                         <button
-                            onClick={finish}
+                            onClick={handleNext}
                             className={styles.primaryBtn}
                             style={{ width: '100%' }}
                             disabled={loading}
