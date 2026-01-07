@@ -21,15 +21,18 @@ export async function GET(req: Request) {
     try {
         // 1. Try Geoapify (Free / No Credit Card required)
         if (process.env.GEOAPIFY_API_KEY) {
-            console.log("Using Geoapify search...");
-            let geoUrl = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${process.env.GEOAPIFY_API_KEY}&limit=5&type=amenity`;
+            console.log("DEBUG: GEOAPIFY_API_KEY found:", process.env.GEOAPIFY_API_KEY.substring(0, 5) + "...");
+            let geoUrl = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${process.env.GEOAPIFY_API_KEY}&limit=5`;
 
             if (lat && lng) {
                 geoUrl += `&bias=proximity:${lng},${lat}`;
             }
 
+            console.log("DEBUG: Fetching from Geoapify:", geoUrl);
             const geoRes = await fetch(geoUrl);
             const geoData = await geoRes.json();
+
+            console.log(`DEBUG: Geoapify found ${geoData.features?.length || 0} features`);
 
             if (geoData.features && geoData.features.length > 0) {
                 const results = geoData.features.map((f: any) => ({
@@ -40,6 +43,8 @@ export async function GET(req: Request) {
                 }));
                 return NextResponse.json(results);
             }
+        } else {
+            console.warn("DEBUG: GEOAPIFY_API_KEY is missing in environment");
         }
 
         // 2. Try Google if key is present
