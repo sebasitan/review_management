@@ -25,6 +25,12 @@ export async function POST(req: Request) {
             return new NextResponse("User not found", { status: 404 });
         }
 
+        // 0. Cleanup old businesses (Fresh Start)
+        // This ensures the user doesn't see old demo data from previous attempts
+        await prisma.business.deleteMany({
+            where: { ownerId: user.id }
+        });
+
         // 1. Create the business
         const business = await prisma.business.create({
             data: {

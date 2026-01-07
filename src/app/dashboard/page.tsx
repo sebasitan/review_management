@@ -122,6 +122,13 @@ export default function DashboardPage() {
 
     return (
         <div>
+            <div style={{ marginBottom: '32px' }}>
+                <h1 style={{ fontSize: '1.875rem', fontWeight: 800, color: '#1e293b' }}>
+                    {stats?.businessName || 'Overview'}
+                </h1>
+                <p style={{ color: '#64748b', marginTop: '4px' }}>Review management and reputation insights</p>
+            </div>
+
             <div className={styles.grid}>
                 {dashboardStats.map((stat, i) => (
                     <div key={i} className={`${styles.statCard} glass`}>
