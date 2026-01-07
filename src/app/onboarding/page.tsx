@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 
 export default function OnboardingPage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [businessName, setBusinessName] = useState('');
@@ -15,27 +15,23 @@ export default function OnboardingPage() {
     const [syncProgress, setSyncProgress] = useState(0);
     const router = useRouter();
 
+    useEffect(() => {
+        if (status === 'authenticated') {
+            fetchLocations();
+        }
+    }, [status]);
+
     const fetchLocations = async () => {
         setLoading(true);
         try {
             const res = await fetch('/api/google/locations');
             const data = await res.json();
-            if (Array.isArray(data)) {
+            if (Array.isArray(data) && data.length > 0) {
                 setLocations(data);
-                if (data.length > 0) {
-                    setStep(3); // Go to location selection
-                } else {
-                    alert("No Google Business locations found for this account. Make sure you have a business set up on Google Maps.");
-                    setStep(2);
-                }
-            } else if (data.error) {
-                // If scope is missing, we might need to re-auth
-                console.error("Fetch Locations Error:", data.error);
-                setStep(2);
+                setStep(3); // Skip straight to Location Selection
             }
         } catch (error) {
-            console.error(error);
-            setStep(2);
+            console.error("Auto-fetch locations failed:", error);
         } finally {
             setLoading(false);
         }
