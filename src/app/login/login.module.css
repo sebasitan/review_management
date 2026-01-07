@@ -1,0 +1,107 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.05), transparent),
+        radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.05), transparent);
+    padding: 20px;
+}
+
+.loginCard {
+    width: 100%;
+    max-width: 440px;
+    padding: 48px;
+    border-radius: 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.loginCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 32px;
+    display: inline-block;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+}
+
+.googleButton {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 24px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.googleButton:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+.googleIcon {
+    width: 20px;
+    height: 20px;
+}
+
+.footer {
+    margin-top: 32px;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.footer a {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.divider {
+    margin: 32px 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+}
