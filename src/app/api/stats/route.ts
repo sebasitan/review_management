@@ -31,15 +31,25 @@ export async function GET() {
             });
         }
 
-        const reviews = user.businesses[0].reviews;
+        const business = user.businesses[0];
+        const reviews = business.reviews;
         const totalReviews = reviews.length;
+
+        // Check if there is an official account linked
+        const googleAccount = await prisma.account.findFirst({
+            where: { userId: user.id, provider: 'google' }
+        });
+
+        // It's official if we have a refresh token (meaning we can sync/reply)
+        const isOfficial = !!googleAccount?.refresh_token;
 
         if (totalReviews === 0) {
             return NextResponse.json({
                 avgRating: 0,
                 totalReviews: 0,
                 responseRate: 0,
-                sentimentScore: 0
+                sentimentScore: 0,
+                isOfficial
             });
         }
 
@@ -47,7 +57,6 @@ export async function GET() {
         const repliedReviews = reviews.filter(r => r.status === 'REPLIED').length;
         const responseRate = (repliedReviews / totalReviews) * 100;
 
-        // Sentiment is -1 to 1, map to 0-100
         const avgSentiment = reviews.reduce((acc, r) => acc + (r.sentiment || 0), 0) / totalReviews;
         const sentimentScore = ((avgSentiment + 1) / 2) * 100;
 
@@ -55,7 +64,9 @@ export async function GET() {
             avgRating: avgRating.toFixed(1),
             totalReviews: totalReviews.toLocaleString(),
             responseRate: responseRate.toFixed(1) + "%",
-            sentimentScore: Math.round(sentimentScore) + "/100"
+            sentimentScore: Math.round(sentimentScore) + "/100",
+            businessName: business.name,
+            isOfficial
         });
     } catch (error) {
         console.error("[STATS_GET]", error);

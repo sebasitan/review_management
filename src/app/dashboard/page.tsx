@@ -7,6 +7,7 @@ import Link from 'next/link';
 import styles from "./dashboard.module.css";
 import AIResponseModal from "@/components/dashboard/AIResponseModal";
 import ManualReplyModal from "@/components/dashboard/ManualReplyModal";
+import ConnectGoogleModal from "@/components/dashboard/ConnectGoogleModal";
 
 const mockStats = [
     { label: "Average Rating", value: "4.8", trend: "+0.2", trendUp: true, icon: "⭐" },
@@ -21,8 +22,10 @@ export default function DashboardPage() {
     const [reviews, setReviews] = useState<any[]>([]);
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedReview, setSelectedReview] = useState<any>(null); // For AI
-    const [manualReview, setManualReview] = useState<any>(null);   // For Manual
+    const [selectedReview, setSelectedReview] = useState<any>(null);
+    const [manualReview, setManualReview] = useState<any>(null);
+    const [showConnectModal, setShowConnectModal] = useState(false);
+    const [isOfficial, setIsOfficial] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -39,6 +42,7 @@ export default function DashboardPage() {
                     setReviews(reviewsData);
                 }
                 setStats(statsData);
+                setIsOfficial(statsData.isOfficial);
             } catch (error) {
                 console.error("Failed to fetch dashboard data:", error);
             } finally {
@@ -58,6 +62,15 @@ export default function DashboardPage() {
         { label: "Sentiment Score", value: stats.sentimentScore, trend: "+5", trendUp: true, icon: "😊" },
     ] : mockStats;
 
+    const handleReviewAction = (review: any, type: 'ai' | 'manual') => {
+        if (!isOfficial) {
+            setShowConnectModal(true);
+            return;
+        }
+        if (type === 'ai') setSelectedReview(review);
+        else setManualReview(review);
+    };
+
     const handlePostResponse = (response: string) => {
         const targetId = selectedReview?.id || manualReview?.id;
         if (!targetId) return;
@@ -67,6 +80,23 @@ export default function DashboardPage() {
         ));
         setSelectedReview(null);
         setManualReview(null);
+    };
+
+    const handleOnConnected = async (locationId: string) => {
+        setLoading(true);
+        try {
+            await fetch('/api/google/sync-reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ locationName: locationId })
+            });
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setShowConnectModal(false);
+            setLoading(false);
+        }
     };
 
     if (loading) return (
@@ -146,13 +176,13 @@ export default function DashboardPage() {
                                     ) : (
                                         <>
                                             <button
-                                                onClick={() => setSelectedReview(review)}
+                                                onClick={() => handleReviewAction(review, 'ai')}
                                                 className={`${styles.primaryBtn} ${styles.btnSm}`}
                                             >
                                                 Generate AI Response
                                             </button>
                                             <button
-                                                onClick={() => setManualReview(review)}
+                                                onClick={() => handleReviewAction(review, 'manual')}
                                                 className={`${styles.secondaryBtn} ${styles.btnSm}`}
                                             >
                                                 Manual Reply
@@ -219,6 +249,13 @@ export default function DashboardPage() {
                     review={manualReview}
                     onClose={() => setManualReview(null)}
                     onPost={handlePostResponse}
+                />
+            )}
+
+            {showConnectModal && (
+                <ConnectGoogleModal
+                    onClose={() => setShowConnectModal(false)}
+                    onConnected={handleOnConnected}
                 />
             )}
         </div>
