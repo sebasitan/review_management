@@ -1,88 +1,64 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styles from '../page.module.css';
 import { useRouter } from 'next/navigation';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 
 export default function OnboardingPage() {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [businessName, setBusinessName] = useState('');
-    const [locations, setLocations] = useState<any[]>([]);
-    const [selectedLocation, setSelectedLocation] = useState<any>(null);
-    const [syncProgress, setSyncProgress] = useState(0);
+    const [query, setQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
     const router = useRouter();
 
-    useEffect(() => {
-        if (status === 'authenticated') {
-            fetchLocations();
-        }
-    }, [status]);
-
-    const fetchLocations = async () => {
+    const searchBusinesses = async () => {
+        if (!query) return;
         setLoading(true);
         try {
-            const res = await fetch('/api/google/locations');
+            // This will call our internal search API which uses Google Places search
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-                setLocations(data);
-                setStep(3); // Skip straight to Location Selection
-            }
+            setSearchResults(data);
         } catch (error) {
-            console.error("Auto-fetch locations failed:", error);
+            console.error("Search failed:", error);
+            alert("Business search is currently unavailable. Please try typing the exact name.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleNext = async () => {
-        if (step === 1) {
-            if (!businessName) return alert('Please enter a business name');
-            setStep(2);
-        } else if (step === 2) {
-            // This step is "Connect Google"
-            await fetchLocations();
-        } else if (step === 3) {
-            if (!selectedLocation) return alert('Please select a business location');
-            setStep(4);
-        } else if (step === 4) {
-            setLoading(true);
-            try {
-                // 1. Create Business
-                const onbRes = await fetch('/api/onboarding', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ businessName, googlePlaceId: selectedLocation.id }),
-                });
+    const handleContinue = async () => {
+        if (!selectedBusiness) return alert('Please select your business');
 
-                if (!onbRes.ok) throw new Error("Failed to create business");
-                const onbData = await onbRes.json();
-                const businessId = onbData.business?.id;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/onboarding', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    businessName: selectedBusiness.name,
+                    googlePlaceId: selectedBusiness.placeId,
+                    address: selectedBusiness.address,
+                    rating: selectedBusiness.rating
+                }),
+            });
 
-                // 2. Sync Reviews
-                setSyncProgress(20);
-                const syncRes = await fetch('/api/google/sync-reviews', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ locationName: selectedLocation.id, businessId }),
-                });
-
-                if (syncRes.ok) {
-                    setSyncProgress(100);
-                    router.push('/dashboard');
-                } else {
-                    alert('Business created, but review sync failed. You can sync later from the dashboard.');
-                    router.push('/dashboard');
-                }
-            } catch (error) {
-                console.error(error);
+            if (res.ok) {
+                setStep(3); // Show success/preview
+            } else {
                 alert('Something went wrong. Please try again.');
-                setLoading(false);
             }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
     };
+
+    const enterDashboard = () => router.push('/dashboard');
 
     return (
         <div className={styles.main} style={{ background: 'var(--background)', justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
@@ -90,121 +66,135 @@ export default function OnboardingPage() {
 
                 {step === 1 && (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>🏢</div>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Let's set up your business</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>Enter your business name to start monitoring reviews across all platforms.</p>
+                        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>🔍</div>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Find your business</h1>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>Enter your business name or Google Maps URL to see your reviews instantly.</p>
 
-                        <input
-                            type="text"
-                            value={businessName}
-                            onChange={(e) => setBusinessName(e.target.value)}
-                            placeholder="e.g. Blue Coffee Roasters"
-                            style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid var(--card-border)', background: 'white', marginBottom: '24px', fontSize: '1rem', color: 'black' }}
-                        />
+                        <div style={{ position: 'relative', marginBottom: '24px' }}>
+                            <input
+                                type="text"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && searchBusinesses()}
+                                placeholder="Business name or Maps URL..."
+                                style={{ width: '100%', padding: '16px 48px 16px 16px', borderRadius: '12px', border: '1px solid var(--card-border)', background: 'white', fontSize: '1rem', color: 'black' }}
+                            />
+                            <button
+                                onClick={searchBusinesses}
+                                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
+                            >
+                                {loading ? '...' : '🔍'}
+                            </button>
+                        </div>
+
+                        {searchResults.length > 0 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', maxHeight: '250px', overflowY: 'auto' }}>
+                                {searchResults.map((biz) => (
+                                    <button
+                                        key={biz.placeId}
+                                        onClick={() => setSelectedBusiness(biz)}
+                                        className="glass"
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', textAlign: 'left',
+                                            border: selectedBusiness?.placeId === biz.placeId ? '2px solid var(--primary)' : '1px solid transparent',
+                                            background: selectedBusiness?.placeId === biz.placeId ? 'rgba(99, 102, 241, 0.05)' : 'white'
+                                        }}
+                                    >
+                                        <div style={{ fontSize: '1.25rem' }}>📍</div>
+                                        <div>
+                                            <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'black' }}>{biz.name}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{biz.address}</div>
+                                        </div>
+                                        {biz.rating && <span style={{ marginLeft: 'auto', color: '#ffb700', fontSize: '0.875rem' }}>{biz.rating} ★</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
                         <button
-                            onClick={handleNext}
+                            onClick={() => selectedBusiness ? setStep(2) : searchBusinesses()}
                             className={styles.primaryBtn}
                             style={{ width: '100%' }}
+                            disabled={loading}
                         >
-                            Continue
+                            {selectedBusiness ? 'Looks Good, Continue' : 'Search Business'}
                         </button>
                     </div>
                 )}
 
                 {step === 2 && (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>🔗</div>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Connect Google Business</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We need official permission to manage your reviews and pull your full history.</p>
+                        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>✨</div>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Ready to analyze</h1>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We found <strong>{selectedBusiness.name}</strong>. We'll pull your public reviews and prepare your dashboard.</p>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-                            <button
-                                onClick={() => signIn('google', { callbackUrl: '/onboarding' })}
-                                className="glass"
-                                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px', borderRadius: '16px', textAlign: 'left', fontWeight: 600, border: '2px solid var(--primary)' }}
-                            >
-                                <span style={{ fontSize: '1.5rem' }}>G</span>
-                                <div>
-                                    <div style={{ fontSize: '1rem' }}>Connect Official Google Profile</div>
-                                    <div style={{ fontSize: '0.75rem', fontWeight: 400, opacity: 0.7 }}>Recommended for automated replies</div>
+                        <div className="glass" style={{ padding: '24px', borderRadius: '20px', marginBottom: '32px', textAlign: 'left', background: 'white' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                                <div style={{ width: '48px', height: '48px', background: 'var(--primary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
+                                    {selectedBusiness.name.charAt(0)}
                                 </div>
-                                <span style={{ marginLeft: 'auto', color: 'var(--primary)' }}>Connect ➔</span>
-                            </button>
-
-                            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-                                Use the same account that manages your business on Google Maps.
-                            </p>
+                                <div>
+                                    <div style={{ fontWeight: 700, fontSize: '1.125rem', color: 'black' }}>{selectedBusiness.name}</div>
+                                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{selectedBusiness.address}</div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '24px' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Platforms</div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <span title="Google Maps">🔵</span>
+                                        <span title="Yelp" style={{ opacity: 0.3 }}>🔴</span>
+                                        <span title="Facebook" style={{ opacity: 0.3 }}>🔵</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Avg. Rating</div>
+                                    <div style={{ color: '#ffb700', fontWeight: 700 }}>{selectedBusiness.rating || 'N/A'} ★</div>
+                                </div>
+                            </div>
                         </div>
 
                         <button
-                            onClick={handleNext}
-                            className={styles.secondaryBtn}
+                            onClick={handleContinue}
+                            className={styles.primaryBtn}
                             style={{ width: '100%' }}
                             disabled={loading}
                         >
-                            {loading ? 'Checking connection...' : 'I already connected, continue'}
+                            {loading ? 'Fetching Reviews...' : 'Confirm & Go to Dashboard'}
                         </button>
+
+                        <p style={{ marginTop: '20px', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>No Google account login required to see your data.</p>
                     </div>
                 )}
 
                 {step === 3 && (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>🗺️</div>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Select Your Location</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We found {locations.length} businesses in your Google account. Which one should we sync?</p>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px', maxHeight: '300px', overflowY: 'auto', padding: '4px' }}>
-                            {locations.map((loc) => (
-                                <button
-                                    key={loc.id}
-                                    onClick={() => setSelectedLocation(loc)}
-                                    className="glass"
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '12px', textAlign: 'left', fontWeight: 600,
-                                        border: selectedLocation?.id === loc.id ? '2px solid var(--primary)' : '1px solid var(--card-border)',
-                                        background: selectedLocation?.id === loc.id ? 'rgba(99, 102, 241, 0.05)' : 'white'
-                                    }}
-                                >
-                                    <div>
-                                        <div style={{ fontSize: '0.9375rem', color: 'black' }}>{loc.name}</div>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>{loc.address}</div>
-                                    </div>
-                                    {selectedLocation?.id === loc.id && <span style={{ marginLeft: 'auto', color: 'var(--primary)' }}>✓</span>}
-                                </button>
-                            ))}
-                        </div>
-
-                        <button
-                            onClick={handleNext}
-                            className={styles.primaryBtn}
-                            style={{ width: '100%' }}
-                        >
-                            Confirm Selection
-                        </button>
-                    </div>
-                )}
-
-                {step === 4 && (
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         <div style={{ fontSize: '3rem', marginBottom: '24px' }}>🚀</div>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Finalizing Setup</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We're importing your official history for <strong>{selectedLocation?.name}</strong>.</p>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Dashboard Ready!</h1>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We've successfully pulled your latest reviews. Your AI assistant is ready.</p>
 
-                        <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '10px', marginBottom: '16px', overflow: 'hidden' }}>
-                            <div style={{ width: `${syncProgress}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.5s ease' }}></div>
+                        <div style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '24px', borderRadius: '20px', marginBottom: '32px', textAlign: 'left' }}>
+                            <div style={{ marginBottom: '12px', fontWeight: 600, fontSize: '0.875rem' }}>Next steps:</div>
+                            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                                <div style={{ color: 'var(--success)' }}>✓</div>
+                                <div style={{ fontSize: '0.875rem' }}>Analyze reviews with AI</div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                                <div style={{ color: 'var(--success)' }}>✓</div>
+                                <div style={{ fontSize: '0.875rem' }}>Check sentiment analysis</div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ color: 'var(--primary)' }}>🔒</div>
+                                <div style={{ fontSize: '0.875rem' }}>Connect official account to post replies (Unlock later)</div>
+                            </div>
                         </div>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--primary)', marginBottom: '40px' }}>
-                            {syncProgress < 100 ? 'Syncing historical reviews...' : 'All caught up!'}
-                        </p>
 
                         <button
-                            onClick={handleNext}
+                            onClick={enterDashboard}
                             className={styles.primaryBtn}
                             style={{ width: '100%' }}
-                            disabled={loading}
                         >
-                            {loading ? 'Entering Dashboard...' : 'Enter Dashboard'}
+                            Enter My Dashboard
                         </button>
                     </div>
                 )}
