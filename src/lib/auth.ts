@@ -26,28 +26,35 @@ export const authOptions: NextAuthOptions = {
             return session;
         },
         async jwt({ token, user }) {
-            const dbUser = await prisma.user.findFirst({
-                where: {
-                    email: token.email,
-                },
-            });
+            try {
+                const dbUser = await prisma.user.findFirst({
+                    where: {
+                        email: token.email,
+                    },
+                });
 
-            if (!dbUser) {
-                if (user) {
-                    token.id = user.id;
+                if (!dbUser) {
+                    if (user) {
+                        token.id = user.id;
+                    }
+                    return token;
                 }
+
+                return {
+                    id: dbUser.id,
+                    name: dbUser.name,
+                    email: dbUser.email,
+                    picture: dbUser.image,
+                };
+            } catch (error) {
+                console.error("NEXTAUTH_JWT_ERROR:", error);
                 return token;
             }
-
-            return {
-                id: dbUser.id,
-                name: dbUser.name,
-                email: dbUser.email,
-                picture: dbUser.image,
-            };
         },
     },
+    debug: process.env.NODE_ENV === "development",
     pages: {
         signIn: "/login",
+        error: "/login", // Redirect back to login on error
     },
 };
