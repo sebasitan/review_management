@@ -16,6 +16,10 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
+        async signIn({ user, account, profile }) {
+            console.log("SIGNIN_CALLBACK_START", { userEmail: user.email, provider: account?.provider });
+            return true;
+        },
         async session({ token, session }) {
             if (token) {
                 session.user.id = token.id;
