@@ -24,7 +24,7 @@ export async function GET() {
         }
 
         // 2. Call Google My Business API (Account List)
-        // Note: The structure of Google Business Profile API is accounts/{accountId}/locations
+        console.log("FETCHING_GOOGLE_ACCOUNTS_FOR:", session.user.email);
         const accountsRes = await fetch("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", {
             headers: {
                 Authorization: `Bearer ${account.access_token}`
@@ -32,6 +32,7 @@ export async function GET() {
         });
 
         const accountsData = await accountsRes.json();
+        console.log("GOOGLE_ACCOUNTS_RESPONSE:", JSON.stringify(accountsData));
 
         if (accountsData.error) {
             console.error("Google API Error:", accountsData.error);
@@ -40,7 +41,10 @@ export async function GET() {
 
         // 3. For each account, fetch locations
         const allLocations = [];
-        for (const gAccount of (accountsData.accounts || [])) {
+        const googleAccounts = accountsData.accounts || [];
+        console.log(`FOUND_${googleAccounts.length}_GOOGLE_ACCOUNTS`);
+
+        for (const gAccount of googleAccounts) {
             const locationsRes = await fetch(`https://mybusinessbusinessinformation.googleapis.com/v1/${gAccount.name}/locations?readMask=name,title,storeCode,regularHours`, {
                 headers: {
                     Authorization: `Bearer ${account.access_token}`
