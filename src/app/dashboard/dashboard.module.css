@@ -1,0 +1,356 @@
+/* --- Layout --- */
+
+.container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--background);
+    position: relative;
+}
+
+/* Sidebar: Desktop Default */
+.sidebar {
+    width: 280px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 32px;
+    border-right: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.7);
+    z-index: 50;
+    transition: transform 0.3s ease;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    position: relative;
+    width: calc(100% - 280px);
+    /* explicit width helper */
+}
+
+/* --- Top Bar --- */
+.topBar {
+    display: flex;
+    align-items: center;
+    padding: 24px 40px;
+    height: 88px;
+    border-bottom: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
+
+.topBarTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.mobileMenuBtn {
+    display: none;
+    /* Hidden by default (Desktop) */
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-primary);
+    margin-right: 16px;
+    padding: 4px;
+}
+
+/* --- Navigation & Sidebar Elements --- */
+.logo {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 48px;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: var(--transition-fast);
+}
+
+.navItem:hover {
+    background: rgba(99, 102, 241, 0.05);
+    color: var(--primary);
+}
+
+.navItemActive {
+    background: var(--primary);
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* --- Dashboard Widgets & Stats --- */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* 4 columns on desktop */
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 32px;
+}
+
+.statCard {
+    padding: 24px;
+    border-radius: 20px;
+}
+
+.statLabel {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.statValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.statTrend {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.trendUp {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.trendDown {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+}
+
+/* --- Review List Styles --- */
+.section {
+    background: transparent;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.reviewCard {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 24px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    transition: var(--transition-normal);
+}
+
+.reviewCard:hover {
+    border-color: var(--primary);
+}
+
+.reviewHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.authorInfo {
+    display: flex;
+    gap: 12px;
+}
+
+.authorAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.authorName {
+    font-weight: 600;
+    font-size: 0.9375rem;
+}
+
+.reviewMeta {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.rating {
+    color: #ffb700;
+    display: flex;
+    gap: 2px;
+}
+
+.reviewText {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.reviewFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.aiBadge {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* --- Common UI --- */
+.primaryBtn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.primaryBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.secondaryBtn {
+    background: white;
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.secondaryBtn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btnSm {
+    padding: 8px 16px;
+    font-size: 0.8125rem;
+}
+
+/* --- Responsive Media Queries --- */
+
+/* Tablet & Mobile ( < 1024px ) */
+@media (max-width: 1024px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        background: white;
+        width: 280px;
+        box-shadow: 20px 0 50px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebarOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 90;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebarOverlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .main {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .mobileMenuBtn {
+        display: block;
+    }
+
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 columns tablet */
+    }
+
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile ( < 768px ) */
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+        /* 1 column mobile */
+    }
+
+    .topBar {
+        padding: 16px 20px;
+    }
+
+    .main {
+        padding: 40px 20px;
+        /* Reduced specific padding for content */
+    }
+}

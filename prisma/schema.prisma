@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  businesses    Business[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Business {
+  id            String    @id @default(cuid())
+  name          String
+  ownerId       String
+  owner         User      @relation(fields: [ownerId], references: [id])
+  googlePlaceId String?   @unique
+  yelpBusinessId String?  @unique
+  facebookPageId String?  @unique
+  reviews       Review[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  subscription  Subscription?
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id])
+  platform        Platform
+  externalId      String   @unique // The ID from Google/Yelp/etc
+  authorName      String
+  authorImage     String?
+  rating          Int
+  content         String   @db.Text
+  publishDate     DateTime
+  aiResponse      String?  @db.Text
+  responsePosted  Boolean  @default(false)
+  sentiment       Float?   // -1.0 to 1.0
+  status          ReviewStatus @default(PENDING)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([businessId])
+}
+
+model Subscription {
+  id         String   @id @default(cuid())
+  businessId String   @unique
+  business   Business @relation(fields: [businessId], references: [id])
+  stripeId   String?  @unique
+  plan       Plan     @default(FREE)
+  status     String   // active, canceled, etc
+  endsAt     DateTime?
+}
+
+enum Platform {
+  GOOGLE
+  YELP
+  FACEBOOK
+}
+
+enum ReviewStatus {
+  PENDING
+  REPLIED
+  FLAGGED
+  IGNORED
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}

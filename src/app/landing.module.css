@@ -1,0 +1,200 @@
+/* Landing Page Specific Styles */
+
+.container {
+    background: var(--background);
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+/* --- Hero --- */
+.heroSection {
+    position: relative;
+    padding: 160px 20px 80px;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* Background Gradients */
+.heroBackground {
+    position: absolute;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120%;
+    height: 800px;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.heroContent {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 100px;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 32px;
+}
+
+.heroTitle {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    letter-spacing: -0.03em;
+}
+
+.heroSubtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.dashboardPreview {
+    margin-top: 64px;
+    position: relative;
+    border-radius: 20px;
+    border: 8px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.2);
+    background: white;
+    overflow: hidden;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    z-index: 2;
+}
+
+/* --- Features --- */
+.section {
+    padding: 100px 20px;
+}
+
+.sectionTitle {
+    text-align: center;
+    margin-bottom: 64px;
+}
+
+.sectionTitle h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+}
+
+.sectionTitle p {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.card {
+    padding: 32px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.iconBox {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(167, 139, 250, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-bottom: 24px;
+    color: var(--primary);
+}
+
+/* --- Pricing --- */
+.pricingCard {
+    padding: 40px;
+    border-radius: 24px;
+    background: white;
+    border: 1px solid var(--card-border);
+    display: flex;
+    flex-direction: column;
+}
+
+.popularPricing {
+    border: 2px solid var(--primary);
+    background: #fdfdff;
+    position: relative;
+    box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.15);
+}
+
+.checkList {
+    list-style: none;
+    margin: 32px 0;
+    flex: 1;
+}
+
+.checkItem {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.checkIcon {
+    color: var(--success);
+    font-weight: bold;
+}
+
+/* --- Stats/Trust --- */
+.trustBadge {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    opacity: 0.5;
+    filter: grayscale(1);
+    margin-top: 40px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .heroTitle {
+        font-size: 2.5rem;
+    }
+
+    .heroSection {
+        padding-top: 120px;
+    }
+
+    .trustBadge {
+        gap: 20px;
+    }
+}
