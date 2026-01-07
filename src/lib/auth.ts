@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions: NextAuthOptions = {
-    adapter: PrismaAdapter(prisma),
     secret: process.env.NEXTAUTH_SECRET,
     session: {
         strategy: "jwt",
@@ -16,9 +15,31 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn({ user, account, profile }) {
-            console.log("SIGNIN_CALLBACK_START", { userEmail: user.email, provider: account?.provider });
-            return true;
+        async signIn({ user, account }) {
+            if (!user.email) return false;
+
+            try {
+                // Manually handle User and Account linkage
+                const existingUser = await prisma.user.findUnique({
+                    where: { email: user.email }
+                });
+
+                if (!existingUser) {
+                    await prisma.user.create({
+                        data: {
+                            email: user.email,
+                            name: user.name,
+                            image: user.image,
+                        }
+                    });
+                }
+
+                console.log("MANUAL_SIGNIN_SUCCESS", user.email);
+                return true;
+            } catch (error) {
+                console.error("MANUAL_SIGNIN_ERROR:", error);
+                return false;
+            }
         },
         async session({ token, session }) {
             if (token) {
