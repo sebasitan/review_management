@@ -16,14 +16,15 @@ A production-ready platform for SMBs to manage their online reputation, automate
 ## Phase 1: Foundation & Setup
 - [x] Initialize Next.js project
 - [x] Setup Prisma & Database Schema
-- [ ] Configuration of Authentication (Google/Email)
+- [x] Configuration of Authentication (Google/NextAuth)
 - [x] Define Design System (index.css)
 
 ## Phase 2: Core Features (MVP)
-- [x] Dashboard: Overview of reputation stats
-- [x] Review Monitoring: Integration with Google/Yelp (Mock/API)
-- [x] AI Response Generator: Automated draft suggestions
-- [x] Review Request System: Email/SMS templates
+- [x] Dashboard: Overview of reputation stats (Mockup)
+- [x] User Login & Auth Guard
+- [ ] Review Monitoring: Integration with Google/Yelp (API)
+- [/] AI Response Generator: Automated draft suggestions (UI Ready)
+- [ ] Review Request System: Email/SMS templates
 
 ## Phase 3: SaaS Infrastructure
 - [/] Stripe Integration (Pricing plans, Checkout)

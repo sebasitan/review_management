@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import styles from '@/app/dashboard/dashboard.module.css';
 
 const mockNotifications = [
@@ -13,16 +13,22 @@ const mockNotifications = [
 ];
 
 export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
+    const { data: session } = useSession();
     const [showNotifs, setShowNotifs] = useState(false);
     const [unreadCount, setUnreadCount] = useState(1);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const notifRef = useRef<HTMLDivElement>(null);
+    const userMenuRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
 
-    // Close dropdown when clicking outside
+    // Close dropdowns when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
                 setShowNotifs(false);
+            }
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+                setShowUserMenu(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -43,6 +49,11 @@ export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         return 'Dashboard';
     };
 
+    const getInitials = (path: string | null | undefined) => {
+        if (!path) return '??';
+        return path.split(' ').map(n => n[0]).join('').toUpperCase();
+    };
+
     return (
         <div className={styles.topBar}>
             {/* Mobile Menu Button */}
@@ -54,7 +65,7 @@ export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             <h2 className={styles.topBarTitle}>{getPageTitle()}</h2>
 
             {/* Right Actions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginLeft: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginLeft: 'auto' }}>
 
                 {/* Notifications */}
                 <div style={{ position: 'relative' }} ref={notifRef}>
@@ -101,9 +112,47 @@ export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                     )}
                 </div>
 
-                {/* User Avatar (Mini) */}
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.9rem' }}>
-                    JW
+                {/* User Profile */}
+                <div style={{ position: 'relative' }} ref={userMenuRef}>
+                    <button
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                    >
+                        <div style={{ textAlign: 'right', display: 'none' }}>
+                            <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>{session?.user?.name || 'User'}</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Administrator</p>
+                        </div>
+                        {session?.user?.image ? (
+                            <img
+                                src={session.user.image}
+                                alt="User"
+                                style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid var(--card-border)' }}
+                            />
+                        ) : (
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
+                                {getInitials(session?.user?.name)}
+                            </div>
+                        )}
+                    </button>
+
+                    {showUserMenu && (
+                        <div className="glass" style={{
+                            position: 'absolute', top: '100%', right: '0', marginTop: '12px', width: '200px',
+                            padding: '8px', borderRadius: '16px', background: 'var(--card-bg)',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)', zIndex: 100
+                        }}>
+                            <div style={{ padding: '12px', borderBottom: '1px solid var(--card-border)', marginBottom: '8px' }}>
+                                <p style={{ fontSize: '0.85rem', fontWeight: 600 }}>{session?.user?.name}</p>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{session?.user?.email}</p>
+                            </div>
+                            <button
+                                onClick={() => signOut({ callbackUrl: '/' })}
+                                style={{ width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: '8px', color: 'var(--error)', fontSize: '0.9rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}
+                            >
+                                🚪 Sign Out
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

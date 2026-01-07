@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter, usePathname } from "next/navigation";
 import styles from "./dashboard.module.css";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import TopBar from "@/components/dashboard/TopBar";
 
 export default function DashboardLayout({
@@ -11,8 +12,27 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const { data: session, status } = useSession();
+    const router = useRouter();
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push("/login");
+        }
+    }, [status, router]);
+
+    if (status === "loading") {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
+    }
+
+    if (!session) return null;
 
     const navItems = [
         { name: 'Overview', href: '/dashboard', icon: '📊' },
