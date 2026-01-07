@@ -19,36 +19,56 @@ export async function GET(req: Request) {
     }
 
     try {
-        if (!process.env.GOOGLE_PLACES_API_KEY) {
-            console.warn("GOOGLE_PLACES_API_KEY missing, using mock search results");
-            const mockResults = [
-                {
-                    name: query,
-                    placeId: "mock_" + Math.random().toString(36).substr(2, 9),
-                    address: lat ? "Located near you" : "123 Main St, New York, NY",
-                    rating: 4.5
-                }
-            ];
-            return NextResponse.json(mockResults);
+        // 1. Try Geoapify (Free / No Credit Card required)
+        if (process.env.GEOAPIFY_API_KEY) {
+            console.log("Using Geoapify search...");
+            let geoUrl = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${process.env.GEOAPIFY_API_KEY}&limit=5&type=amenity`;
+
+            if (lat && lng) {
+                geoUrl += `&bias=proximity:${lng},${lat}`;
+            }
+
+            const geoRes = await fetch(geoUrl);
+            const geoData = await geoRes.json();
+
+            if (geoData.features && geoData.features.length > 0) {
+                const results = geoData.features.map((f: any) => ({
+                    name: f.properties.name || f.properties.formatted,
+                    placeId: f.properties.place_id,
+                    address: f.properties.formatted,
+                    rating: 4.0
+                }));
+                return NextResponse.json(results);
+            }
         }
 
-        let searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${process.env.GOOGLE_PLACES_API_KEY}`;
-
-        if (lat && lng) {
-            searchUrl += `&location=${lat},${lng}&radius=50000`; // 50km radius
+        // 2. Try Google if key is present
+        if (process.env.GOOGLE_PLACES_API_KEY) {
+            let searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+            if (lat && lng) {
+                searchUrl += `&location=${lat},${lng}&radius=50000`;
+            }
+            const res = await fetch(searchUrl);
+            const data = await res.json();
+            const results = (data.results || []).map((p: any) => ({
+                name: p.name,
+                placeId: p.place_id,
+                address: p.formatted_address,
+                rating: p.rating
+            }));
+            return NextResponse.json(results);
         }
 
-        const res = await fetch(searchUrl);
-        const data = await res.json();
-
-        const results = (data.results || []).map((p: any) => ({
-            name: p.name,
-            placeId: p.place_id,
-            address: p.formatted_address,
-            rating: p.rating
-        }));
-
-        return NextResponse.json(results);
+        // 3. Fallback to Mock
+        const mockResults = [
+            {
+                name: query,
+                placeId: "mock_" + Math.random().toString(36).substr(2, 9),
+                address: lat ? "Located near you" : "123 Main St, New York, NY",
+                rating: 4.5
+            }
+        ];
+        return NextResponse.json(mockResults);
     } catch (error) {
         console.error("[SEARCH_GET]", error);
         return new NextResponse("Internal Error", { status: 500 });
