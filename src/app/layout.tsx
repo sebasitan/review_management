@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +26,9 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body suppressHydrationWarning>
-        {children}
+        <NextAuthProvider>
+          {children}
+        </NextAuthProvider>
       </body>
     </html>
   );
