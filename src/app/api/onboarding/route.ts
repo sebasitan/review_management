@@ -26,10 +26,25 @@ export async function POST(req: Request) {
         }
 
         // 0. Cleanup old businesses (Fresh Start)
-        // This ensures the user doesn't see old demo data from previous attempts
-        await prisma.business.deleteMany({
-            where: { ownerId: user.id }
+        // Manual cascading deletion to avoid foreign key constraint errors
+        const existingBusinesses = await prisma.business.findMany({
+            where: { ownerId: user.id },
+            select: { id: true }
         });
+
+        const businessIds = existingBusinesses.map(b => b.id);
+
+        if (businessIds.length > 0) {
+            await prisma.review.deleteMany({
+                where: { businessId: { in: businessIds } }
+            });
+            await prisma.subscription.deleteMany({
+                where: { businessId: { in: businessIds } }
+            });
+            await prisma.business.deleteMany({
+                where: { id: { in: businessIds } }
+            });
+        }
 
         // 1. Create the business
         const business = await prisma.business.create({
