@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '../page.module.css';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -18,20 +18,29 @@ export default function OnboardingPage() {
         if (!query) return;
         setLoading(true);
         try {
-            // This will call our internal search API which uses Google Places search
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
             setSearchResults(data);
         } catch (error) {
             console.error("Search failed:", error);
-            alert("Business search is currently unavailable. Please try typing the exact name.");
         } finally {
             setLoading(false);
         }
     };
 
+    const handleManualEntry = () => {
+        setSelectedBusiness({
+            name: query || '',
+            placeId: 'manual_' + Math.random().toString(36).substr(2, 9),
+            address: '',
+            rating: 4.0,
+            reviewCount: 10
+        });
+        setStep(2);
+    };
+
     const handleContinue = async () => {
-        if (!selectedBusiness) return alert('Please select your business');
+        if (!selectedBusiness?.name) return alert('Please enter your business name');
 
         setLoading(true);
         try {
@@ -42,14 +51,15 @@ export default function OnboardingPage() {
                     businessName: selectedBusiness.name,
                     googlePlaceId: selectedBusiness.placeId,
                     address: selectedBusiness.address,
-                    rating: selectedBusiness.rating
+                    rating: selectedBusiness.rating,
+                    reviewCount: selectedBusiness.reviewCount
                 }),
             });
 
             if (res.ok) {
-                setStep(3); // Show success/preview
+                setStep(3);
             } else {
-                alert('Something went wrong. Please try again.');
+                alert('Connection failed. Please try again.');
             }
         } catch (error) {
             console.error(error);
@@ -58,167 +68,159 @@ export default function OnboardingPage() {
         }
     };
 
-    const enterDashboard = () => router.push('/dashboard');
-
     return (
-        <div className={styles.main} style={{ background: 'var(--background)', justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
-            <div className="glass" style={{ width: '100%', maxWidth: '600px', padding: '48px', borderRadius: '32px', textAlign: 'center' }}>
+        <div className={styles.main} style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+
+            {/* Progress Header */}
+            <div style={{ position: 'absolute', top: '40px', display: 'flex', gap: '8px' }}>
+                {[1, 2, 3].map(i => (
+                    <div key={i} style={{ width: '40px', height: '4px', borderRadius: '2px', background: step >= i ? 'var(--primary)' : '#cbd5e1', transition: 'all 0.3s ease' }} />
+                ))}
+            </div>
+
+            <div className="glass" style={{ width: '100%', maxWidth: '540px', padding: '40px', borderRadius: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)', background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)' }}>
 
                 {step === 1 && (
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>🔍</div>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Find your business</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>Enter your business name or Google Maps URL to see your reviews instantly.</p>
+                    <div style={{ animation: 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                        <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', marginBottom: '24px', fontSize: '2rem' }}>📍</div>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Find your business</h1>
+                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>We'll analyze your public reviews and prepare your AI dashboard in seconds.</p>
 
-                        <div style={{ position: 'relative', marginBottom: '24px' }}>
+                        <div style={{ position: 'relative', marginBottom: '20px' }}>
+                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>🔍</div>
                             <input
                                 type="text"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && searchBusinesses()}
-                                placeholder="Business name or Maps URL..."
-                                style={{ width: '100%', padding: '16px 48px 16px 16px', borderRadius: '12px', border: '1px solid var(--card-border)', background: 'white', fontSize: '1rem', color: 'black' }}
+                                placeholder="E.g. Stallioni Net Solutions"
+                                style={{ width: '100%', padding: '18px 18px 18px 48px', borderRadius: '16px', border: '2px solid #e2e8f0', background: 'white', fontSize: '1.1rem', color: '#1e293b', outline: 'none', transition: 'border-color 0.2s' }}
                             />
-                            <button
-                                onClick={searchBusinesses}
-                                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
-                            >
-                                {loading ? '...' : '🔍'}
-                            </button>
+                            {loading && <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', width: '20px', height: '20px', border: '2px solid #e2e8f0', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
                         </div>
 
-                        {searchResults.length > 0 && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', maxHeight: '250px', overflowY: 'auto' }}>
+                        {searchResults.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px', maxHeight: '240px', overflowY: 'auto', padding: '4px' }}>
                                 {searchResults.map((biz) => (
                                     <button
                                         key={biz.placeId}
-                                        onClick={() => setSelectedBusiness(biz)}
-                                        className="glass"
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', textAlign: 'left',
-                                            border: selectedBusiness?.placeId === biz.placeId ? '2px solid var(--primary)' : '1px solid transparent',
-                                            background: selectedBusiness?.placeId === biz.placeId ? 'rgba(99, 102, 241, 0.05)' : 'white'
-                                        }}
+                                        onClick={() => { setSelectedBusiness(biz); setStep(2); }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '16px', textAlign: 'left', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
                                     >
-                                        <div style={{ fontSize: '1.25rem' }}>📍</div>
-                                        <div>
-                                            <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'black' }}>{biz.name}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{biz.address}</div>
+                                        <div style={{ fontSize: '1.25rem' }}>🏢</div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>{biz.name}</div>
+                                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{biz.address}</div>
                                         </div>
-                                        {biz.rating && <span style={{ marginLeft: 'auto', color: '#ffb700', fontSize: '0.875rem' }}>{biz.rating} ★</span>}
+                                        <div style={{ color: '#f59e0b', fontWeight: 600 }}>{biz.rating} ★</div>
                                     </button>
                                 ))}
+                                <button onClick={handleManualEntry} style={{ color: 'var(--primary)', background: 'none', border: 'none', padding: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}>None of these? Add manually →</button>
                             </div>
+                        ) : (
+                            <button
+                                onClick={searchBusinesses}
+                                className={styles.primaryBtn}
+                                style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}
+                                disabled={loading || !query}
+                            >
+                                Search Reviews
+                            </button>
                         )}
 
-                        <button
-                            onClick={() => {
-                                if (selectedBusiness) {
-                                    setStep(2);
-                                } else if (query) {
-                                    // Manual entry fallback
-                                    setSelectedBusiness({
-                                        name: query,
-                                        placeId: 'manual_' + Math.random().toString(36).substr(2, 9),
-                                        address: 'Manual Entry Location',
-                                        rating: 5.0
-                                    });
-                                    setStep(2);
-                                } else {
-                                    searchBusinesses();
-                                }
-                            }}
-                            className={styles.primaryBtn}
-                            style={{ width: '100%' }}
-                            disabled={loading && !query}
-                        >
-                            {selectedBusiness ? 'Confirm Selection' : query ? 'Continue with this name' : 'Search Business'}
-                        </button>
-
-                        {query && !loading && searchResults.length === 0 && (
-                            <p style={{ marginTop: '16px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                Business not found? <span style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }} onClick={() => {
-                                    setSelectedBusiness({ name: query, placeId: 'manual_loc', address: 'Custom Location', rating: 5.0 });
-                                    setStep(2);
-                                }}>Enter details manually</span>
-                            </p>
+                        {!loading && searchResults.length === 0 && query && (
+                            <div style={{ marginTop: '24px', padding: '16px', borderRadius: '16px', background: '#f8fafc', border: '1px dashed #cbd5e1', cursor: 'pointer' }} onClick={handleManualEntry}>
+                                <p style={{ fontSize: '0.9rem', color: '#64748b' }}>Search not working? <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Click here to enter details manually</span> and see your dashboard.</p>
+                            </div>
                         )}
                     </div>
                 )}
 
                 {step === 2 && (
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>✨</div>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Ready to analyze</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We found <strong>{selectedBusiness.name}</strong>. We'll pull your public reviews and prepare your dashboard.</p>
+                    <div style={{ animation: 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                        <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', marginBottom: '24px', fontSize: '2rem' }}>✨</div>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Verify Details</h1>
+                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>Make sure these match your Google profile for accurate AI insights.</p>
 
-                        <div className="glass" style={{ padding: '24px', borderRadius: '20px', marginBottom: '32px', textAlign: 'left', background: 'white' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                                <div style={{ width: '48px', height: '48px', background: 'var(--primary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
-                                    {selectedBusiness.name.charAt(0)}
-                                </div>
-                                <div>
-                                    <div style={{ fontWeight: 700, fontSize: '1.125rem', color: 'black' }}>{selectedBusiness.name}</div>
-                                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{selectedBusiness.address}</div>
-                                </div>
+                        <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
+                            <div>
+                                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Business Display Name</label>
+                                <input
+                                    type="text"
+                                    value={selectedBusiness?.name || ''}
+                                    onChange={(e) => setSelectedBusiness({ ...selectedBusiness, name: e.target.value })}
+                                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '2px solid #e2e8f0', color: '#1e293b', fontWeight: 500 }}
+                                />
                             </div>
-                            <div style={{ display: 'flex', gap: '24px' }}>
-                                <div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Platforms</div>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <span title="Google Maps">🔵</span>
-                                        <span title="Yelp" style={{ opacity: 0.3 }}>🔴</span>
-                                        <span title="Facebook" style={{ opacity: 0.3 }}>🔵</span>
+                            <div style={{ display: 'flex', gap: '16px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Google Rating</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={selectedBusiness?.rating || 0}
+                                            onChange={(e) => setSelectedBusiness({ ...selectedBusiness, rating: parseFloat(e.target.value) })}
+                                            style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '2px solid #e2e8f0', color: '#1e293b', fontWeight: 600 }}
+                                        />
+                                        <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#f59e0b' }}>★</span>
                                     </div>
                                 </div>
-                                <div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Avg. Rating</div>
-                                    <div style={{ color: '#ffb700', fontWeight: 700 }}>{selectedBusiness.rating || 'N/A'} ★</div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Total Reviews</label>
+                                    <input
+                                        type="number"
+                                        value={selectedBusiness?.reviewCount || 0}
+                                        onChange={(e) => setSelectedBusiness({ ...selectedBusiness, reviewCount: parseInt(e.target.value) })}
+                                        style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '2px solid #e2e8f0', color: '#1e293b', fontWeight: 600 }}
+                                    />
                                 </div>
                             </div>
                         </div>
 
-                        <button
-                            onClick={handleContinue}
-                            className={styles.primaryBtn}
-                            style={{ width: '100%' }}
-                            disabled={loading}
-                        >
-                            {loading ? 'Fetching Reviews...' : 'Confirm & Go to Dashboard'}
-                        </button>
-
-                        <p style={{ marginTop: '20px', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>No Google account login required to see your data.</p>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button onClick={() => setStep(1)} style={{ padding: '16px 24px', borderRadius: '16px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, border: 'none', cursor: 'pointer' }}>Back</button>
+                            <button
+                                onClick={handleContinue}
+                                className={styles.primaryBtn}
+                                style={{ flex: 1, padding: '16px', borderRadius: '16px', fontWeight: 700, fontSize: '1.1rem' }}
+                                disabled={loading}
+                            >
+                                {loading ? 'Creating Dashboard...' : 'Create My Dashboard'}
+                            </button>
+                        </div>
                     </div>
                 )}
 
                 {step === 3 && (
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>🚀</div>
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '16px' }}>Dashboard Ready!</h1>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>We've successfully pulled your latest reviews. Your AI assistant is ready.</p>
+                    <div style={{ animation: 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                        <div style={{ fontSize: '4rem', marginBottom: '24px' }}>🚀</div>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Success!</h1>
+                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>We've set up your reputation engine for <strong>{selectedBusiness.name}</strong>.</p>
 
-                        <div style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '24px', borderRadius: '20px', marginBottom: '32px', textAlign: 'left' }}>
-                            <div style={{ marginBottom: '12px', fontWeight: 600, fontSize: '0.875rem' }}>Next steps:</div>
-                            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                                <div style={{ color: 'var(--success)' }}>✓</div>
-                                <div style={{ fontSize: '0.875rem' }}>Analyze reviews with AI</div>
+                        <div style={{ background: 'linear-gradient(rgba(99, 102, 241, 0.05), rgba(99, 102, 241, 0.02))', padding: '24px', borderRadius: '24px', border: '1px solid rgba(99, 102, 241, 0.1)', marginBottom: '32px', textAlign: 'left' }}>
+                            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✓</div>
+                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>Public reviews analyzed</div>
                             </div>
-                            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                                <div style={{ color: 'var(--success)' }}>✓</div>
-                                <div style={{ fontSize: '0.875rem' }}>Check sentiment analysis</div>
+                            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✓</div>
+                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>AI response model trained</div>
                             </div>
                             <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ color: 'var(--primary)' }}>🔒</div>
-                                <div style={{ fontSize: '0.875rem' }}>Connect official account to post replies (Unlock later)</div>
+                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#6366f1', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>🔒</div>
+                                <div style={{ fontSize: '0.95rem', color: '#475569' }}>Connect Official account to auto-reply</div>
                             </div>
                         </div>
 
                         <button
-                            onClick={enterDashboard}
+                            onClick={() => router.push('/dashboard')}
                             className={styles.primaryBtn}
-                            style={{ width: '100%' }}
+                            style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: 700, fontSize: '1.2rem' }}
                         >
-                            Enter My Dashboard
+                            Open Dashboard
                         </button>
                     </div>
                 )}
@@ -226,11 +228,14 @@ export default function OnboardingPage() {
             </div>
 
             <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 }

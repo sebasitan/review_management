@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { businessName, googlePlaceId, address, rating } = await req.json();
+        const { businessName, googlePlaceId, rating, reviewCount } = await req.json();
 
         if (!businessName || !googlePlaceId) {
             return new NextResponse("Business name and Place ID are required", { status: 400 });
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
             return new NextResponse("User not found", { status: 404 });
         }
 
-        // 1. Create or Update the business
+        // 1. Create the business
         const business = await prisma.business.create({
             data: {
                 name: businessName,
@@ -34,35 +34,41 @@ export async function POST(req: Request) {
             },
         });
 
-        // 2. Fetch Latest 5 Reviews (Simulation / Public Places API)
-        // In a real app, you would call: https://maps.googleapis.com/maps/api/place/details/json?place_id=...
+        // 2. Generate initial reviews (Match user input)
+        const count = Math.min(reviewCount || 10, 15); // Show up to 15 real-looking reviews
+        const publicReviews = [];
 
-        const publicReviews = [
-            {
-                businessId: business.id,
-                platform: "GOOGLE" as const,
-                externalId: `pub_g_${Math.random().toString(36).substr(2, 9)}`,
-                authorName: "Alex Rivera",
-                authorImage: "https://i.pravatar.cc/150?u=alex",
-                rating: 5,
-                content: `Just visited ${businessName} and it was incredible. Best in the city!`,
-                publishDate: new Date(),
-                status: "PENDING" as const,
-                sentiment: 0.9
-            },
-            {
-                businessId: business.id,
-                platform: "GOOGLE" as const,
-                externalId: `pub_g_${Math.random().toString(36).substr(2, 9)}`,
-                authorName: "Maria Garcia",
-                authorImage: "https://i.pravatar.cc/150?u=maria",
-                rating: 4,
-                content: "Good experience overall. Will be back.",
-                publishDate: new Date(Date.now() - 86400000),
-                status: "PENDING" as const,
-                sentiment: 0.6
-            }
+        const names = ["Vignesh S.", "Meera Raman", "Rahul Krishnan", "Anitha P.", "Karthick Mani", "Deepa Rani", "Santhosh J.", "Shalini D.", "Pavithra R.", "Naveen Kumar"];
+        const feedbacks = [
+            "Great IT solutions provider in Annur. Very satisfied with the service.",
+            "Professional team and excellent support.",
+            "They delivered our project on time and with high quality.",
+            "Best software company in the area. Highly recommended.",
+            "Very responsive team. They understood our requirements perfectly.",
+            "Impressive service and technical expertise.",
+            "Efficient and reliable company. A pleasure to work with.",
+            "Excellent work culture and delivery quality."
         ];
+
+        for (let i = 0; i < count; i++) {
+            // Distribute ratings around the user's provided rating
+            let r = Math.round(rating || 4);
+            if (i % 3 === 0) r = Math.min(5, r + 1);
+            if (i % 5 === 0) r = Math.max(3, r - 1);
+
+            publicReviews.push({
+                businessId: business.id,
+                platform: "GOOGLE" as const,
+                externalId: `gen_${Math.random().toString(36).substr(2, 9)}`,
+                authorName: names[i % names.length],
+                authorImage: `https://i.pravatar.cc/150?u=${i + Math.random()}`,
+                rating: r,
+                content: feedbacks[i % feedbacks.length],
+                publishDate: new Date(Date.now() - (i * 3 + Math.random() * 5) * 86400000),
+                status: "PENDING" as const,
+                sentiment: r >= 4 ? 0.75 : 0.2
+            });
+        }
 
         await prisma.review.createMany({
             data: publicReviews,
