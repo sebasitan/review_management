@@ -159,36 +159,17 @@ export default function OnboardingPage() {
 
                         <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
                             <div>
-                                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Business Display Name</label>
-                                <input
-                                    type="text"
-                                    value={selectedBusiness?.name || ''}
-                                    onChange={(e) => setSelectedBusiness({ ...selectedBusiness, name: e.target.value })}
-                                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '2px solid #e2e8f0', color: '#1e293b', fontWeight: 500 }}
-                                />
-                            </div>
-                            <div style={{ display: 'flex', gap: '16px' }}>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Google Rating</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <input
-                                            type="number"
-                                            step="0.1"
-                                            value={selectedBusiness?.rating || 0}
-                                            onChange={(e) => setSelectedBusiness({ ...selectedBusiness, rating: parseFloat(e.target.value) })}
-                                            style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '2px solid #e2e8f0', color: '#1e293b', fontWeight: 600 }}
-                                        />
-                                        <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#f59e0b' }}>★</span>
-                                    </div>
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Total Reviews</label>
-                                    <input
-                                        type="number"
-                                        value={selectedBusiness?.reviewCount || 0}
-                                        onChange={(e) => setSelectedBusiness({ ...selectedBusiness, reviewCount: parseInt(e.target.value) })}
-                                        style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '2px solid #e2e8f0', color: '#1e293b', fontWeight: 600 }}
-                                    />
+                                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Confirm Location</label>
+                                <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', height: '200px' }}>
+                                    <iframe
+                                        width="100%"
+                                        height="100%"
+                                        frameBorder="0"
+                                        style={{ border: 0 }}
+                                        src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedBusiness?.name + ' ' + (selectedBusiness?.address || ''))}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                                        aria-hidden="false"
+                                        tabIndex={0}
+                                    ></iframe>
                                 </div>
                             </div>
                         </div>
