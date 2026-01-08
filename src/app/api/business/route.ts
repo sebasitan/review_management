@@ -81,23 +81,28 @@ export async function DELETE(req: Request) {
             include: { businesses: true }
         });
 
-        const ownsBusiness = user?.businesses.some((b: any) => b.id === id);
+        const ownsBusiness = user?.businesses.some((b: { id: string }) => b.id === id);
         if (!ownsBusiness) {
             return new NextResponse("Forbidden", { status: 403 });
         }
 
-        // Delete dependencies first
-        await prisma.review.deleteMany({
+        // Delete dependencies first (Google-safe compliant relations)
+        await prisma.reviewRequest.deleteMany({
             where: { businessId: id }
         });
 
-        await prisma.subscription.deleteMany({
+        await prisma.analyticsEvent.deleteMany({
+            where: { businessId: id }
+        });
+
+        await prisma.reviewDraft.deleteMany({
             where: { businessId: id }
         });
 
         await prisma.business.delete({
             where: { id }
         });
+
 
         return NextResponse.json({ success: true });
 
