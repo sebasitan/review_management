@@ -128,7 +128,12 @@ export default function OnboardingPage() {
                                             <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>{biz.name}</div>
                                             <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{biz.address}</div>
                                         </div>
-                                        <div style={{ color: '#f59e0b', fontWeight: 600 }}>{biz.rating} ★</div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ color: '#f59e0b', fontWeight: 600 }}>{biz.rating} ★</div>
+                                            {biz.reviewCount > 0 && (
+                                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{biz.reviewCount} reviews</div>
+                                            )}
+                                        </div>
                                     </button>
                                 ))}
                                 <button onClick={handleManualEntry} style={{ color: 'var(--primary)', background: 'none', border: 'none', padding: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}>None of these? Add manually →</button>

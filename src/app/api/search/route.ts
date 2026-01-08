@@ -35,13 +35,68 @@ export async function GET(req: Request) {
             console.log(`DEBUG: Geoapify found ${geoData.features?.length || 0} features`);
 
             if (geoData.features && geoData.features.length > 0) {
-                const results = geoData.features.map((f: any) => ({
-                    name: f.properties.name || f.properties.formatted,
-                    placeId: f.properties.place_id,
-                    address: f.properties.formatted,
-                    category: f.properties.categories?.[0] || "business",
-                    rating: 4.0
-                }));
+                const results = [];
+
+                // If we have Google API key, enrich with real Google data
+                if (process.env.GOOGLE_PLACES_API_KEY) {
+                    for (const f of geoData.features) {
+                        const businessName = f.properties.name || f.properties.formatted;
+                        const address = f.properties.formatted;
+
+                        try {
+                            // Search Google Places to get the actual place_id and rating
+                            const googleSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(businessName + ' ' + address)}&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+                            const googleRes = await fetch(googleSearchUrl);
+                            const googleData = await googleRes.json();
+
+                            if (googleData.results && googleData.results.length > 0) {
+                                const place = googleData.results[0];
+                                results.push({
+                                    name: place.name,
+                                    placeId: place.place_id, // Real Google Place ID
+                                    address: place.formatted_address,
+                                    category: f.properties.categories?.[0] || place.types?.[0] || "business",
+                                    rating: place.rating || 4.0,
+                                    reviewCount: place.user_ratings_total || 0
+                                });
+                            } else {
+                                // Fallback to Geoapify data if Google doesn't find it
+                                results.push({
+                                    name: businessName,
+                                    placeId: f.properties.place_id,
+                                    address: address,
+                                    category: f.properties.categories?.[0] || "business",
+                                    rating: 4.0,
+                                    reviewCount: 0
+                                });
+                            }
+                        } catch (err) {
+                            console.error("Error enriching with Google data:", err);
+                            // Fallback to Geoapify data
+                            results.push({
+                                name: businessName,
+                                placeId: f.properties.place_id,
+                                address: address,
+                                category: f.properties.categories?.[0] || "business",
+                                rating: 4.0,
+                                reviewCount: 0
+                            });
+                        }
+                    }
+                } else {
+                    // No Google API, use Geoapify data only
+                    for (const f of geoData.features) {
+                        results.push({
+                            name: f.properties.name || f.properties.formatted,
+                            placeId: f.properties.place_id,
+                            address: f.properties.formatted,
+                            category: f.properties.categories?.[0] || "business",
+                            rating: 4.0,
+                            reviewCount: 0
+                        });
+                    }
+                }
+
                 return NextResponse.json(results);
             }
         } else {
