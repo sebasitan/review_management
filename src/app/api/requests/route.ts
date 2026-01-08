@@ -1,38 +1,51 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { Channel } from "@prisma/client";
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session || !session.user?.email) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
     try {
         const { recipient, method, content } = await req.json();
 
-        if (!recipient || !content) {
-            return new NextResponse("Missing fields", { status: 400 });
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            include: { businesses: true }
+        });
+
+        if (!user || user.businesses.length === 0) {
+            return new NextResponse("Business profile not found", { status: 404 });
         }
 
-        console.log(`Sending ${method} to ${recipient}: ${content}`);
+        const business = user.businesses[0];
 
-        // In a real app, you would integrate Twilio for SMS or Resend/SendGrid for Email
-        /*
-        if (method === 'email') {
-            await sendEmail(recipient, content);
-        } else {
-            await sendSMS(recipient, content);
-        }
-        */
+        // Map method string to Channel enum
+        let channel: Channel = Channel.EMAIL;
+        if (method === 'whatsapp') channel = Channel.WHATSAPP;
+        else if (method === 'sms') channel = Channel.SMS;
+        else if (method === 'qr') channel = Channel.QR_CODE;
 
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Log the request
+        await prisma.reviewRequest.create({
+            data: {
+                businessId: business.id,
+                channel: channel,
+                recipient: recipient // Optional
+            }
+        });
 
-        return NextResponse.json({ success: true, message: `Request sent successfully via ${method}` });
+        console.log(`[REQUEST] Logged ${channel} request for ${business.name}`);
+
+        return NextResponse.json({ success: true, message: `Request logged successfully via ${method}` });
     } catch (error) {
         console.error("[REQUEST_POST]", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }
+

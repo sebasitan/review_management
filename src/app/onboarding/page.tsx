@@ -44,16 +44,20 @@ export default function OnboardingPage() {
     const handleManualEntry = () => {
         setSelectedBusiness({
             name: query || '',
-            placeId: 'manual_' + Math.random().toString(36).substr(2, 9),
             address: '',
-            rating: 4.0,
-            reviewCount: 10
+            city: '',
+            country: '',
+            lat: location?.lat || 0,
+            lng: location?.lng || 0,
+            placeId: 'manual_' + Math.random().toString(36).substr(2, 9)
         });
         setStep(2);
     };
 
     const handleContinue = async () => {
-        if (!selectedBusiness?.name) return alert('Please enter your business name');
+        if (!selectedBusiness?.name || !selectedBusiness?.address) {
+            return alert('Please select a business with a valid address or enter details manually');
+        }
 
         setLoading(true);
         try {
@@ -62,18 +66,19 @@ export default function OnboardingPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     businessName: selectedBusiness.name,
-                    googlePlaceId: selectedBusiness.placeId,
                     address: selectedBusiness.address,
-                    category: selectedBusiness.category,
-                    rating: selectedBusiness.rating,
-                    reviewCount: selectedBusiness.reviewCount
+                    city: selectedBusiness.city,
+                    country: selectedBusiness.country,
+                    lat: selectedBusiness.lat,
+                    lng: selectedBusiness.lng,
+                    placeId: selectedBusiness.placeId
                 }),
             });
 
             if (res.ok) {
                 setStep(3);
             } else {
-                alert('Connection failed. Please try again.');
+                alert('Failed to save business profile. Please try again.');
             }
         } catch (error) {
             console.error(error);
@@ -88,7 +93,7 @@ export default function OnboardingPage() {
             {/* Progress Header */}
             <div style={{ position: 'absolute', top: '40px', display: 'flex', gap: '8px' }}>
                 {[1, 2, 3].map(i => (
-                    <div key={i} style={{ width: '40px', height: '4px', borderRadius: '2px', background: step >= i ? 'var(--primary)' : '#cbd5e1', transition: 'all 0.3s ease' }} />
+                    <div key={i} style={{ width: '40px', height: '4px', borderRadius: '2px', background: step >= i ? '#6366f1' : '#cbd5e1', transition: 'all 0.3s ease' }} />
                 ))}
             </div>
 
@@ -96,9 +101,9 @@ export default function OnboardingPage() {
 
                 {step === 1 && (
                     <div style={{ animation: 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-                        <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', marginBottom: '24px', fontSize: '2rem' }}>📍</div>
+                        <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', marginBottom: '24px', fontSize: '2rem' }}>📍</div>
                         <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Find your business</h1>
-                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>We'll analyze your public reviews and prepare your AI dashboard in seconds.</p>
+                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>Search for your business profile to get started.</p>
 
                         <div style={{ position: 'relative', marginBottom: '20px' }}>
                             <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>🔍</div>
@@ -110,17 +115,17 @@ export default function OnboardingPage() {
                                 placeholder="E.g. Stallioni Net Solutions"
                                 style={{ width: '100%', padding: '18px 18px 18px 48px', borderRadius: '16px', border: '2px solid #e2e8f0', background: 'white', fontSize: '1.1rem', color: '#1e293b', outline: 'none', transition: 'border-color 0.2s' }}
                             />
-                            {loading && <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', width: '20px', height: '20px', border: '2px solid #e2e8f0', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
+                            {loading && <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', width: '20px', height: '20px', border: '2px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />}
                         </div>
 
                         {searchResults.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px', maxHeight: '240px', overflowY: 'auto', padding: '4px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px', maxHeight: '300px', overflowY: 'auto', padding: '4px' }}>
                                 {searchResults.map((biz) => (
                                     <button
                                         key={biz.placeId}
                                         onClick={() => { setSelectedBusiness(biz); setStep(2); }}
                                         style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '16px', textAlign: 'left', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
-                                        onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#6366f1'}
                                         onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
                                     >
                                         <div style={{ fontSize: '1.25rem' }}>🏢</div>
@@ -128,30 +133,24 @@ export default function OnboardingPage() {
                                             <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>{biz.name}</div>
                                             <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{biz.address}</div>
                                         </div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ color: '#f59e0b', fontWeight: 600 }}>{biz.rating} ★</div>
-                                            {biz.reviewCount > 0 && (
-                                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{biz.reviewCount} reviews</div>
-                                            )}
-                                        </div>
                                     </button>
                                 ))}
-                                <button onClick={handleManualEntry} style={{ color: 'var(--primary)', background: 'none', border: 'none', padding: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}>None of these? Add manually →</button>
+                                <button onClick={handleManualEntry} style={{ color: '#6366f1', background: 'none', border: 'none', padding: '12px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}>None of these? Add manually →</button>
                             </div>
                         ) : (
                             <button
                                 onClick={searchBusinesses}
                                 className={styles.primaryBtn}
-                                style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}
+                                style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: 700, fontSize: '1.1rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)', background: '#6366f1', color: 'white', border: 'none', cursor: 'pointer' }}
                                 disabled={loading || !query}
                             >
-                                Search Reviews
+                                Search Business
                             </button>
                         )}
 
                         {!loading && searchResults.length === 0 && query && (
                             <div style={{ marginTop: '24px', padding: '16px', borderRadius: '16px', background: '#f8fafc', border: '1px dashed #cbd5e1', cursor: 'pointer' }} onClick={handleManualEntry}>
-                                <p style={{ fontSize: '0.9rem', color: '#64748b' }}>Search not working? <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Click here to enter details manually</span> and see your dashboard.</p>
+                                <p style={{ fontSize: '0.9rem', color: '#64748b' }}>Don't see your business? <span style={{ color: '#6366f1', fontWeight: 700 }}>Click here to enter details manually</span>.</p>
                             </div>
                         )}
                     </div>
@@ -160,138 +159,100 @@ export default function OnboardingPage() {
                 {step === 2 && (
                     <div style={{ animation: 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                         <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', marginBottom: '24px', fontSize: '2rem' }}>✨</div>
-                        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Verify Details</h1>
-                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>Search and select your business on the map, or confirm the pre-selected location.</p>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Confirm Business</h1>
+                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>Please verify your business information below.</p>
 
-                        <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
-                            <div>
-                                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Search & Select Your Business</label>
-
-                                {/* Search Input */}
-                                <div style={{ position: 'relative', marginBottom: '12px' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="Search for your business on the map..."
-                                        defaultValue={selectedBusiness?.name}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px 12px 12px 40px',
-                                            borderRadius: '12px',
-                                            border: '2px solid #e2e8f0',
-                                            fontSize: '0.9375rem',
-                                            outline: 'none'
-                                        }}
-                                        onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-                                        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                                    />
-                                    <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '1.1rem' }}>🔍</span>
+                        <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0', marginBottom: '32px', textAlign: 'left' }}>
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Business Name</label>
+                                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{selectedBusiness?.name}</div>
+                            </div>
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Address</label>
+                                <div style={{ fontSize: '1rem', color: '#475569' }}>{selectedBusiness?.address}</div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '20px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>City</label>
+                                    <div style={{ fontSize: '1rem', color: '#475569' }}>{selectedBusiness?.city || 'N/A'}</div>
                                 </div>
-
-                                {/* Interactive Map */}
-                                <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', position: 'relative', height: '300px' }}>
-                                    <iframe
-                                        width="100%"
-                                        height="100%"
-                                        frameBorder="0"
-                                        style={{ border: 0 }}
-                                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY'}&q=place_id:${selectedBusiness?.placeId || ''}&zoom=15`}
-                                        allowFullScreen
-                                    ></iframe>
-
-                                    {/* Overlay button for full interaction */}
-                                    <a
-                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedBusiness?.name + ' ' + (selectedBusiness?.address || ''))}&query_place_id=${selectedBusiness?.placeId || ''}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                            position: 'absolute',
-                                            bottom: '12px',
-                                            right: '12px',
-                                            background: 'white',
-                                            padding: '10px 18px',
-                                            borderRadius: '8px',
-                                            fontSize: '0.875rem',
-                                            fontWeight: 600,
-                                            color: 'var(--primary)',
-                                            textDecoration: 'none',
-                                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '6px',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.transform = 'scale(1.05)';
-                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.transform = 'scale(1)';
-                                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-                                        }}
-                                    >
-                                        <span>🗺️</span> Open in Google Maps
-                                    </a>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Country</label>
+                                    <div style={{ fontSize: '1rem', color: '#475569' }}>{selectedBusiness?.country || 'N/A'}</div>
                                 </div>
-
-                                <div style={{ marginTop: '12px', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                    <div style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '6px' }}>
-                                        <strong style={{ color: '#475569' }}>Selected:</strong> {selectedBusiness?.name}
-                                    </div>
-                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                        📍 {selectedBusiness?.address}
-                                    </div>
-                                    {selectedBusiness?.rating && (
-                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
-                                            ⭐ {selectedBusiness.rating} ({selectedBusiness.reviewCount || 0} reviews)
-                                        </div>
-                                    )}
-                                </div>
-
-                                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '8px' }}>
-                                    💡 Click "Open in Google Maps" to search and select a different business, then come back to continue.
-                                </p>
                             </div>
                         </div>
+
+                        <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${selectedBusiness?.lat},${selectedBusiness?.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                width: '100%',
+                                padding: '16px',
+                                borderRadius: '16px',
+                                background: 'white',
+                                color: '#1e293b',
+                                fontWeight: 600,
+                                textDecoration: 'none',
+                                border: '2px solid #e2e8f0',
+                                marginBottom: '24px',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#6366f1'}
+                            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+                        >
+                            🗺️ Open in Google Maps
+                        </a>
 
                         <div style={{ display: 'flex', gap: '12px' }}>
                             <button onClick={() => setStep(1)} style={{ padding: '16px 24px', borderRadius: '16px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, border: 'none', cursor: 'pointer' }}>Back</button>
                             <button
                                 onClick={handleContinue}
-                                className={styles.primaryBtn}
-                                style={{ flex: 1, padding: '16px', borderRadius: '16px', fontWeight: 700, fontSize: '1.1rem' }}
+                                style={{ flex: 1, padding: '16px', borderRadius: '16px', fontWeight: 700, fontSize: '1.1rem', background: '#6366f1', color: 'white', border: 'none', cursor: 'pointer' }}
                                 disabled={loading}
                             >
-                                {loading ? 'Creating Dashboard...' : 'Create My Dashboard'}
+                                {loading ? 'Saving...' : 'Confirm & Continue'}
                             </button>
                         </div>
                     </div>
                 )}
 
                 {step === 3 && (
-                    <div style={{ animation: 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                    <div style={{ animation: 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)', textAlign: 'center' }}>
                         <div style={{ fontSize: '4rem', marginBottom: '24px' }}>🚀</div>
-                        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Success!</h1>
-                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>We've set up your reputation engine for <strong>{selectedBusiness.name}</strong>.</p>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Profile Ready!</h1>
+                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>Your business profile for <strong>{selectedBusiness?.name}</strong> has been created.</p>
 
-                        <div style={{ background: 'linear-gradient(rgba(99, 102, 241, 0.05), rgba(99, 102, 241, 0.02))', padding: '24px', borderRadius: '24px', border: '1px solid rgba(99, 102, 241, 0.1)', marginBottom: '32px', textAlign: 'left' }}>
+                        <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', marginBottom: '32px', textAlign: 'left' }}>
                             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✓</div>
-                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>Public reviews analyzed</div>
+                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>Business profile saved</div>
                             </div>
                             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✓</div>
-                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>AI response model trained</div>
+                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>Review request tools initialized</div>
                             </div>
                             <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#6366f1', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>🔒</div>
-                                <div style={{ fontSize: '0.95rem', color: '#475569' }}>Connect Official account to auto-reply</div>
+                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✓</div>
+                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>AI reply assistant ready</div>
                             </div>
                         </div>
 
+                        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', marginBottom: '32px', border: '1px solid #e2e8f0' }}>
+                            <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748b', lineHeight: 1.5 }}>
+                                💡 <strong>Note:</strong> Ratings and reviews are managed directly on your Google Maps profile. We provide the tools to help you engage with customers and respond faster with AI.
+                            </p>
+                        </div>
+
+
                         <button
                             onClick={() => router.push('/dashboard')}
-                            className={styles.primaryBtn}
-                            style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: 700, fontSize: '1.2rem' }}
+                            style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: 700, fontSize: '1.2rem', background: '#6366f1', color: 'white', border: 'none', cursor: 'pointer' }}
                         >
                             Open Dashboard
                         </button>
@@ -308,7 +269,11 @@ export default function OnboardingPage() {
                 @keyframes spin {
                     to { transform: rotate(360deg); }
                 }
+                .glass {
+                    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+                }
             `}</style>
         </div>
     );
 }
+

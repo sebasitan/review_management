@@ -6,17 +6,18 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
+    if (!session || !session.user?.email) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
     try {
         const user = await prisma.user.findUnique({
-            where: { email: session.user?.email! },
+            where: { email: session.user.email },
             include: {
                 businesses: {
                     include: {
-                        reviews: true
+                        reviewRequests: true,
+                        analytics: true,
                     }
                 }
             }
@@ -24,52 +25,46 @@ export async function GET() {
 
         if (!user || user.businesses.length === 0) {
             return NextResponse.json({
-                avgRating: 0,
-                totalReviews: 0,
-                responseRate: 0,
-                sentimentScore: 0
+                hasBusiness: false,
+                stats: null
             });
         }
 
         const business = user.businesses[0];
-        const reviews = business.reviews;
-        const totalReviews = reviews.length;
+        const requests = business.reviewRequests;
 
-        // Check if there is an official account linked
-        const googleAccount = await prisma.account.findFirst({
-            where: { userId: user.id, provider: 'google' }
-        });
+        // Channel Breakdown
+        const channelBreakdown = requests.reduce((acc: any, req: { channel: string }) => {
+            acc[req.channel] = (acc[req.channel] || 0) + 1;
+            return acc;
+        }, { WHATSAPP: 0, SMS: 0, EMAIL: 0, QR_CODE: 0 });
 
-        // It's official if we have a refresh token (meaning we can sync/reply)
-        const isOfficial = !!googleAccount?.refresh_token;
-
-        if (totalReviews === 0) {
-            return NextResponse.json({
-                avgRating: 0,
-                totalReviews: 0,
-                responseRate: 0,
-                sentimentScore: 0,
-                isOfficial
-            });
-        }
-
-        const avgRating = reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews;
-        const repliedReviews = reviews.filter(r => r.status === 'REPLIED').length;
-        const responseRate = (repliedReviews / totalReviews) * 100;
-
-        const avgSentiment = reviews.reduce((acc, r) => acc + (r.sentiment || 0), 0) / totalReviews;
-        const sentimentScore = ((avgSentiment + 1) / 2) * 100;
+        // Total Internal Events (Clicks/Scans if tracked)
+        const totalEvents = business.analytics.length;
 
         return NextResponse.json({
-            avgRating: avgRating.toFixed(1),
-            totalReviews: totalReviews.toLocaleString(),
-            responseRate: responseRate.toFixed(1) + "%",
-            sentimentScore: Math.round(sentimentScore) + "/100",
-            businessName: business.name,
-            isOfficial
+            hasBusiness: true,
+            business: {
+                id: business.id,
+                name: business.name,
+                address: business.address,
+                city: business.city,
+                country: business.country,
+                lat: business.lat,
+                lng: business.lng,
+                placeId: business.placeId,
+                status: "ACTIVE"
+            },
+            stats: {
+                totalRequests: requests.length,
+                totalEngagement: totalEvents,
+                channels: channelBreakdown,
+                growth: "+12%" // Internal request growth mock
+            }
         });
     } catch (error) {
         console.error("[STATS_GET]", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }
+

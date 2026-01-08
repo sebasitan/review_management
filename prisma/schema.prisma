@@ -55,61 +55,58 @@ model Business {
   name          String
   ownerId       String
   owner         User      @relation(fields: [ownerId], references: [id])
-  googlePlaceId String?   @unique
-  yelpBusinessId String?  @unique
-  facebookPageId String?  @unique
-  reviews       Review[]
+  
+  // Geoapify / Location Data
+  address       String
+  city          String?
+  country       String?
+  lat           Float
+  lng           Float
+  placeId       String?   // Can be Geoapify or Google Place ID (for link generation)
+
+  // Review Requests
+  reviewRequests ReviewRequest[]
+  analytics     AnalyticsEvent[]
+
+  // AI Drafts (Local only)
+  reviewDrafts  ReviewDraft[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  subscription  Subscription?
 }
 
-model Review {
-  id              String   @id @default(cuid())
-  businessId      String
-  business        Business @relation(fields: [businessId], references: [id])
-  platform        Platform
-  externalId      String   @unique // The ID from Google/Yelp/etc
-  authorName      String
-  authorImage     String?
-  rating          Int
-  content         String   @db.Text
-  publishDate     DateTime
-  aiResponse      String?  @db.Text
-  responsePosted  Boolean  @default(false)
-  sentiment       Float?   // -1.0 to 1.0
-  status          ReviewStatus @default(PENDING)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([businessId])
+model ReviewRequest {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  channel     Channel
+  recipient   String?  // Phone or Email (optional for privacy)
+  createdAt   DateTime @default(now())
 }
 
-model Subscription {
-  id         String   @id @default(cuid())
-  businessId String   @unique
-  business   Business @relation(fields: [businessId], references: [id])
-  stripeId   String?  @unique
-  plan       Plan     @default(FREE)
-  status     String   // active, canceled, etc
-  endsAt     DateTime?
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  type        String   // 'link_click', 'qr_scan', etc.
+  channel     Channel?
+  createdAt   DateTime @default(now())
 }
 
-enum Platform {
-  GOOGLE
-  YELP
-  FACEBOOK
+model ReviewDraft {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  reviewText  String   @db.Text
+  tone        String
+  aiResponse  String   @db.Text
+  createdAt   DateTime @default(now())
 }
 
-enum ReviewStatus {
-  PENDING
-  REPLIED
-  FLAGGED
-  IGNORED
+enum Channel {
+  WHATSAPP
+  SMS
+  EMAIL
+  QR_CODE
 }
 
-enum Plan {
-  FREE
-  PRO
-  ENTERPRISE
-}

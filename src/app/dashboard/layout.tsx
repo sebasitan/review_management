@@ -36,14 +36,9 @@ export default function DashboardLayout({
 
     const navItems = [
         { name: 'Overview', href: '/dashboard', icon: '📊' },
-        { name: 'Reviews', href: '/dashboard/reviews', icon: '⭐' },
-        { name: 'Requests', href: '/dashboard/requests', icon: '📩' },
+        { name: 'AI Assistant', href: '/dashboard/ai-assistant', icon: '🤖' },
+        { name: 'Review Requests', href: '/dashboard/requests', icon: '📩' },
         { name: 'Analytics', href: '/dashboard/analytics', icon: '📈' },
-        { name: 'Automations', href: '/dashboard/automation', icon: '⚡' },
-        { name: 'Competitors', href: '/dashboard/competitors', icon: '⚔️' },
-        { name: 'Widgets', href: '/dashboard/widgets', icon: '🧩' },
-        { name: 'Marketing', href: '/dashboard/marketing', icon: '📢' },
-        { name: 'Help & Support', href: '/dashboard/help', icon: '❓' },
         { name: 'Settings', href: '/dashboard/settings', icon: '⚙️' },
     ];
 
@@ -74,11 +69,11 @@ export default function DashboardLayout({
                 </nav>
 
                 <div style={{ marginTop: 'auto', padding: '20px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '16px' }}>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' }}>PRO PLAN</p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' }}>FREE TIER</p>
                     <div style={{ width: '100%', height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
-                        <div style={{ width: '65%', height: '100%', background: 'var(--primary)' }}></div>
+                        <div style={{ width: '100%', height: '100%', background: '#10b981' }}></div>
                     </div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '8px' }}>650 / 1000 reviews</p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '8px' }}>Google-Safe Active</p>
                 </div>
             </aside>
 
