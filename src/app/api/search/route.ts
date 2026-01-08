@@ -39,6 +39,7 @@ export async function GET(req: Request) {
                     name: f.properties.name || f.properties.formatted,
                     placeId: f.properties.place_id,
                     address: f.properties.formatted,
+                    category: f.properties.categories?.[0] || "business",
                     rating: 4.0
                 }));
                 return NextResponse.json(results);

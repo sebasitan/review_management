@@ -64,6 +64,7 @@ export default function OnboardingPage() {
                     businessName: selectedBusiness.name,
                     googlePlaceId: selectedBusiness.placeId,
                     address: selectedBusiness.address,
+                    category: selectedBusiness.category,
                     rating: selectedBusiness.rating,
                     reviewCount: selectedBusiness.reviewCount
                 }),
