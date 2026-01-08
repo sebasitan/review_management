@@ -61,27 +61,36 @@ export async function POST(req: Request) {
         // Try to fetch real reviews if API Key is available
         if (process.env.GOOGLE_PLACES_API_KEY && googlePlaceId && !googlePlaceId.startsWith('manual_')) {
             try {
-                const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=reviews&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+                console.log(`[ONBOARDING] Fetching reviews for Place ID: ${googlePlaceId}`);
+                const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,rating,user_ratings_total,reviews&key=${process.env.GOOGLE_PLACES_API_KEY}`;
                 const detailsRes = await fetch(detailsUrl);
                 const detailsData = await detailsRes.json();
 
-                if (detailsData.result && detailsData.result.reviews) {
+                console.log(`[ONBOARDING] Google API Status: ${detailsData.status}`);
+                console.log(`[ONBOARDING] Reviews found: ${detailsData.result?.reviews?.length || 0}`);
+
+                if (detailsData.status === 'OK' && detailsData.result && detailsData.result.reviews) {
                     publicReviews = detailsData.result.reviews.map((r: any) => ({
                         businessId: business.id,
                         platform: "GOOGLE" as const,
-                        externalId: `g_${Math.random().toString(36).substr(2, 9)}`, // Google doesn't always expose stable IDs in basic fields
+                        externalId: `google_${r.time}_${Math.random().toString(36).substr(2, 9)}`,
                         authorName: r.author_name,
-                        authorImage: r.profile_photo_url,
+                        authorImage: r.profile_photo_url || null,
                         rating: r.rating,
-                        content: r.text,
+                        content: r.text || '',
                         publishDate: new Date(r.time * 1000),
                         status: "PENDING" as const,
                         sentiment: r.rating >= 4 ? 0.8 : (r.rating <= 2 ? 0.2 : 0.5)
                     }));
+                    console.log(`[ONBOARDING] Successfully mapped ${publicReviews.length} reviews`);
+                } else {
+                    console.error(`[ONBOARDING] Google API Error: ${detailsData.status} - ${detailsData.error_message || 'No error message'}`);
                 }
             } catch (error) {
-                console.error("Failed to fetch Google reviews:", error);
+                console.error("[ONBOARDING] Failed to fetch Google reviews:", error);
             }
+        } else {
+            console.log('[ONBOARDING] Skipping Google API - No API key or manual entry');
         }
 
         // Fallback to Mock Reviews if no real reviews found
