@@ -166,17 +166,43 @@ export default function OnboardingPage() {
                         <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
                             <div>
                                 <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Confirm Location</label>
-                                <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', height: '200px' }}>
+                                <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', position: 'relative' }}>
                                     <iframe
                                         width="100%"
-                                        height="100%"
+                                        height="200"
                                         frameBorder="0"
                                         style={{ border: 0 }}
                                         src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedBusiness?.name + ' ' + (selectedBusiness?.address || ''))}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                                         aria-hidden="false"
                                         tabIndex={0}
                                     ></iframe>
+                                    <a
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedBusiness?.name + ' ' + (selectedBusiness?.address || ''))}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            position: 'absolute',
+                                            bottom: '12px',
+                                            right: '12px',
+                                            background: 'white',
+                                            padding: '8px 16px',
+                                            borderRadius: '8px',
+                                            fontSize: '0.875rem',
+                                            fontWeight: 600,
+                                            color: 'var(--primary)',
+                                            textDecoration: 'none',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px'
+                                        }}
+                                    >
+                                        <span>📍</span> View larger map
+                                    </a>
                                 </div>
+                                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '8px' }}>
+                                    Click "View larger map" to verify this is your business on Google Maps
+                                </p>
                             </div>
                         </div>
 
