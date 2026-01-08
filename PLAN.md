@@ -46,3 +46,4 @@ A production-ready platform for SMBs to manage their online reputation, automate
 3. View existing reviews in Dashboard
 4. AI generates response suggestions -> Owner approves/edits and posts
 5. Monitor growth through analytics
+    
