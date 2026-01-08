@@ -161,23 +161,46 @@ export default function OnboardingPage() {
                     <div style={{ animation: 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                         <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', marginBottom: '24px', fontSize: '2rem' }}>✨</div>
                         <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Verify Details</h1>
-                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>Make sure these match your Google profile for accurate AI insights.</p>
+                        <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>Search and select your business on the map, or confirm the pre-selected location.</p>
 
                         <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
                             <div>
-                                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Confirm Location</label>
-                                <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', position: 'relative' }}>
+                                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '8px' }}>Search & Select Your Business</label>
+
+                                {/* Search Input */}
+                                <div style={{ position: 'relative', marginBottom: '12px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Search for your business on the map..."
+                                        defaultValue={selectedBusiness?.name}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 12px 12px 40px',
+                                            borderRadius: '12px',
+                                            border: '2px solid #e2e8f0',
+                                            fontSize: '0.9375rem',
+                                            outline: 'none'
+                                        }}
+                                        onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                                        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                                    />
+                                    <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '1.1rem' }}>🔍</span>
+                                </div>
+
+                                {/* Interactive Map */}
+                                <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', position: 'relative', height: '300px' }}>
                                     <iframe
                                         width="100%"
-                                        height="200"
+                                        height="100%"
                                         frameBorder="0"
                                         style={{ border: 0 }}
-                                        src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedBusiness?.name + ' ' + (selectedBusiness?.address || ''))}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                                        aria-hidden="false"
-                                        tabIndex={0}
+                                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY'}&q=place_id:${selectedBusiness?.placeId || ''}&zoom=15`}
+                                        allowFullScreen
                                     ></iframe>
+
+                                    {/* Overlay button for full interaction */}
                                     <a
-                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedBusiness?.name + ' ' + (selectedBusiness?.address || ''))}`}
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedBusiness?.name + ' ' + (selectedBusiness?.address || ''))}&query_place_id=${selectedBusiness?.placeId || ''}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         style={{
@@ -185,7 +208,7 @@ export default function OnboardingPage() {
                                             bottom: '12px',
                                             right: '12px',
                                             background: 'white',
-                                            padding: '8px 16px',
+                                            padding: '10px 18px',
                                             borderRadius: '8px',
                                             fontSize: '0.875rem',
                                             fontWeight: 600,
@@ -194,14 +217,38 @@ export default function OnboardingPage() {
                                             boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '6px'
+                                            gap: '6px',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'scale(1)';
+                                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
                                         }}
                                     >
-                                        <span>📍</span> View larger map
+                                        <span>🗺️</span> Open in Google Maps
                                     </a>
                                 </div>
+
+                                <div style={{ marginTop: '12px', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                    <div style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '6px' }}>
+                                        <strong style={{ color: '#475569' }}>Selected:</strong> {selectedBusiness?.name}
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                        📍 {selectedBusiness?.address}
+                                    </div>
+                                    {selectedBusiness?.rating && (
+                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                                            ⭐ {selectedBusiness.rating} ({selectedBusiness.reviewCount || 0} reviews)
+                                        </div>
+                                    )}
+                                </div>
+
                                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '8px' }}>
-                                    Click "View larger map" to verify this is your business on Google Maps
+                                    💡 Click "Open in Google Maps" to search and select a different business, then come back to continue.
                                 </p>
                             </div>
                         </div>
