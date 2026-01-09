@@ -61,7 +61,7 @@ export default function DashboardPage() {
         { label: "Requests Sent", value: stats.totalRequests, trend: stats.growth, trendUp: true, icon: "📩" },
         { label: "WhatsApp", value: stats.channels.WHATSAPP, icon: "📱" },
         { label: "SMS / Email", value: stats.channels.SMS + stats.channels.EMAIL, icon: "✉️" },
-        { label: "QR Scans", value: stats.totalEngagement, icon: "🔍" },
+        { label: "Total Reviews", value: stats.totalReviews, icon: "⭐" },
     ];
 
     return (

@@ -4,17 +4,18 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from "../dashboard.module.css";
 
-const templates = [
-    { id: 1, name: 'Standard Request', content: "Hi! We'd love to hear your feedback about your recent visit. Could you spare a minute to leave us a review on Google?" },
-    { id: 2, name: 'Post-Purchase', content: "Thank you for your business! How was your experience? Let us know with a quick Google review." },
-    { id: 3, name: 'Personalized', content: "It was a pleasure serving you today. Your feedback helps us grow. Please leave us a review here:" }
+const defaultTemplates = [
+    { id: '1', name: 'Standard Request', content: "Hi! We'd love to hear your feedback about your recent visit. Could you spare a minute to leave us a review on Google?" },
+    { id: '2', name: 'Post-Purchase', content: "Thank you for your business! How was your experience? Let us know with a quick Google review." },
+    { id: '3', name: 'Personalized', content: "It was a pleasure serving you today. Your feedback helps us grow. Please leave us a review here:" }
 ];
 
 export default function RequestsPage() {
     const searchParams = useSearchParams();
     const businessId = searchParams.get('businessId');
     const [method, setMethod] = useState<'whatsapp' | 'sms' | 'email'>('whatsapp');
-    const [selectedTemplate, setSelectedTemplate] = useState(templates[0]);
+    const [dynamicTemplates, setDynamicTemplates] = useState<any[]>(defaultTemplates);
+    const [selectedTemplate, setSelectedTemplate] = useState(defaultTemplates[0]);
     const [recipient, setRecipient] = useState('');
     const [businessData, setBusinessData] = useState<any>(null);
     const [isSending, setIsSending] = useState(false);
@@ -27,6 +28,16 @@ export default function RequestsPage() {
             .then(data => {
                 if (data.hasBusiness) setBusinessData(data.business);
             });
+
+        if (businessId) {
+            fetch(`/api/templates?businessId=${businessId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        setDynamicTemplates([...defaultTemplates, ...data]);
+                    }
+                });
+        }
     }, [businessId]);
 
     const getReviewLink = () => {
@@ -135,7 +146,7 @@ export default function RequestsPage() {
                     <div style={{ marginBottom: '20px' }}>
                         <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '8px' }}>Select Template</label>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
-                            {templates.map(t => (
+                            {dynamicTemplates.map(t => (
                                 <button
                                     key={t.id}
                                     onClick={() => setSelectedTemplate(t)}

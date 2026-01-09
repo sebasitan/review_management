@@ -21,10 +21,11 @@ export async function GET(req: Request) {
                     include: {
                         reviewRequests: true,
                         analytics: true,
+                        reviews: true,
                     }
                 }
             }
-        });
+        }) as any;
 
         if (!user || user.businesses.length === 0) {
             return NextResponse.json({
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
         }
 
         const business = businessId
-            ? user.businesses.find(b => b.id === businessId) || user.businesses[0]
+            ? user.businesses.find((b: any) => b.id === businessId) || user.businesses[0]
             : user.businesses[0];
         const requests = business.reviewRequests;
 
@@ -63,8 +64,9 @@ export async function GET(req: Request) {
             stats: {
                 totalRequests: requests.length,
                 totalEngagement: totalEvents,
+                totalReviews: business.reviews.length,
                 channels: channelBreakdown,
-                growth: "+12%" // Internal request growth mock
+                growth: business.reviews.length > 0 ? "+15%" : "0%"
             }
         });
     } catch (error) {

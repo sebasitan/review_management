@@ -78,8 +78,36 @@ export default function SettingsPage() {
         router.push('/onboarding');
     }
 
+    const [checkingOut, setCheckingOut] = useState<string | null>(null);
+
+    const handleCheckout = async (planId: string) => {
+        if (planId === 'starter') return; // Current plan or handled differently
+
+        setCheckingOut(planId);
+        try {
+            const res = await fetch('/api/stripe/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ planId })
+            });
+
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                alert('Checkout failed to initialize');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Something went wrong');
+        } finally {
+            setCheckingOut(null);
+        }
+    };
+
     const plans = [
         {
+            id: 'starter',
             name: 'Starter',
             price: '$29',
             features: ['Up to 100 reviews/mo', 'AI Response Drafts', 'Google Business Sync', 'Email Support'],
@@ -87,6 +115,7 @@ export default function SettingsPage() {
             current: true
         },
         {
+            id: 'professional',
             name: 'Professional',
             price: '$79',
             features: ['Up to 1,000 reviews/mo', 'Advanced AI Customization', 'Yelp & Facebook Sync', 'SMS Review Requests', 'Priority Support'],
@@ -95,6 +124,7 @@ export default function SettingsPage() {
             recommended: true
         },
         {
+            id: 'enterprise',
             name: 'Enterprise',
             price: '$199',
             features: ['Unlimited reviews', 'Whitelabel Dashboard', 'API Access', 'Custom AI Training', 'Dedicated Account Manager'],
@@ -244,11 +274,12 @@ export default function SettingsPage() {
                                 </ul>
 
                                 <button
+                                    onClick={() => handleCheckout(plan.id || '')}
                                     className={plan.recommended ? styles.primaryBtn : styles.secondaryBtn}
-                                    disabled={plan.current}
+                                    disabled={plan.current || checkingOut === plan.id}
                                     style={{ width: '100%' }}
                                 >
-                                    {plan.button}
+                                    {checkingOut === plan.id ? 'Loading...' : plan.button}
                                 </button>
                             </div>
                         ))}

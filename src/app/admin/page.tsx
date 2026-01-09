@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from "../dashboard/dashboard.module.css";
 import Link from "next/link";
 
@@ -63,7 +63,8 @@ const mockUsage = [
 
 export default function AdminPortal() {
     const [activeTab, setActiveTab] = useState('tenants');
-    const [businesses, setBusinesses] = useState(mockBusinesses);
+    const [businesses, setBusinesses] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedTenant, setSelectedTenant] = useState<any>(null);
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [systemPrompt, setSystemPrompt] = useState('You are an empathetic customer support agent. Reply to reviews professionally and concisely.');
@@ -71,6 +72,24 @@ export default function AdminPortal() {
     // Marketing State
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [isBroadcasting, setIsBroadcasting] = useState(false);
+
+    useEffect(() => {
+        const fetchTenants = async () => {
+            try {
+                const res = await fetch('/api/admin/tenants');
+                if (res.ok) {
+                    const data = await res.json();
+                    setBusinesses(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch tenants:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTenants();
+    }, []);
 
     // Constants
     const TABS = [
@@ -105,6 +124,12 @@ export default function AdminPortal() {
             setBroadcastMsg('');
         }, 1500);
     };
+
+    if (loading) return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--background)' }}>
+            <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(0,0,0,0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        </div>
+    );
 
     return (
         <div style={{ padding: '40px', minHeight: '100vh', background: 'var(--background)' }}>

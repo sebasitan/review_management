@@ -20,6 +20,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   businesses    Business[]
+  role          String    @default("USER")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -66,10 +67,13 @@ model Business {
   placeId       String?   // Can be Geoapify or Google Place ID (for link generation)
 
   // Review Requests
+  reviews       Review[]
   reviewRequests ReviewRequest[]
   analytics     AnalyticsEvent[]
 
   // AI Drafts (Local only)
+  reviewTemplates ReviewTemplate[]
+  automationRules AutomationRule[]
   reviewDrafts  ReviewDraft[]
 
   createdAt     DateTime  @default(now())
@@ -102,6 +106,44 @@ model ReviewDraft {
   tone        String
   aiResponse  String   @db.Text
   createdAt   DateTime @default(now())
+}
+
+model ReviewTemplate {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  name        String
+  content     String   @db.Text
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AutomationRule {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  name        String
+  trigger     String
+  condition   String
+  action      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  author      String
+  rating      Int
+  content     String   @db.Text
+  platform    String   // 'GOOGLE', 'YELP', 'INTERNAL'
+  date        DateTime @default(now())
+  reply       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum Channel {

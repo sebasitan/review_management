@@ -231,18 +231,37 @@ export default function OnboardingPage() {
                         <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b', marginBottom: '12px', letterSpacing: '-0.02em' }}>Profile Ready!</h1>
                         <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>Your business profile for <strong>{selectedBusiness?.name}</strong> has been created.</p>
 
-                        <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', marginBottom: '32px', textAlign: 'left' }}>
-                            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✓</div>
-                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>Business profile saved</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+                            <div className="glass" style={{ padding: '20px', borderRadius: '20px', textAlign: 'left', border: '1px solid #e2e8f0' }}>
+                                <div style={{ fontSize: '1.5rem', marginBottom: '12px' }}>🔄</div>
+                                <div style={{ fontWeight: 700, marginBottom: '4px' }}>Sync Reviews</div>
+                                <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '12px' }}>Import your existing reviews to get started.</p>
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await fetch('/api/reviews', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ businessId: createdBusinessId })
+                                            });
+                                            alert('Demo reviews synced!');
+                                        } catch (e) { }
+                                    }}
+                                    style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                >
+                                    Sync Demo Data →
+                                </button>
                             </div>
-                            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✓</div>
-                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>Review request tools initialized</div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>✓</div>
-                                <div style={{ fontSize: '0.95rem', color: '#1e293b', fontWeight: 500 }}>AI reply assistant ready</div>
+                            <div className="glass" style={{ padding: '20px', borderRadius: '20px', textAlign: 'left', border: '1px solid #e2e8f0' }}>
+                                <div style={{ fontSize: '1.5rem', marginBottom: '12px' }}>📝</div>
+                                <div style={{ fontWeight: 700, marginBottom: '4px' }}>Set Template</div>
+                                <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '12px' }}>Customize your review request message.</p>
+                                <button
+                                    onClick={() => router.push(`/dashboard/requests?businessId=${createdBusinessId}`)}
+                                    style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                >
+                                    Edit Template →
+                                </button>
                             </div>
                         </div>
 
@@ -252,12 +271,11 @@ export default function OnboardingPage() {
                             </p>
                         </div>
 
-
                         <button
                             onClick={() => router.push(createdBusinessId ? `/dashboard?businessId=${createdBusinessId}` : '/dashboard')}
                             style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: 700, fontSize: '1.2rem', background: '#6366f1', color: 'white', border: 'none', cursor: 'pointer' }}
                         >
-                            Open Dashboard
+                            Go to Dashboard
                         </button>
                     </div>
                 )}
