@@ -167,21 +167,44 @@ export default function OnboardingPage() {
 
                         <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0', marginBottom: '32px', textAlign: 'left' }}>
                             <div style={{ marginBottom: '16px' }}>
-                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Business Name</label>
-                                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{selectedBusiness?.name}</div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Business Name</label>
+                                <input
+                                    type="text"
+                                    value={selectedBusiness?.name || ''}
+                                    onChange={(e) => setSelectedBusiness({ ...selectedBusiness, name: e.target.value })}
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}
+                                />
                             </div>
                             <div style={{ marginBottom: '16px' }}>
-                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Address</label>
-                                <div style={{ fontSize: '1rem', color: '#475569' }}>{selectedBusiness?.address}</div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Address</label>
+                                <input
+                                    type="text"
+                                    value={selectedBusiness?.address || ''}
+                                    onChange={(e) => setSelectedBusiness({ ...selectedBusiness, address: e.target.value })}
+                                    placeholder="Enter full address"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', color: '#475569' }}
+                                />
                             </div>
                             <div style={{ display: 'flex', gap: '20px' }}>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>City</label>
-                                    <div style={{ fontSize: '1rem', color: '#475569' }}>{selectedBusiness?.city || 'N/A'}</div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>City</label>
+                                    <input
+                                        type="text"
+                                        value={selectedBusiness?.city || ''}
+                                        onChange={(e) => setSelectedBusiness({ ...selectedBusiness, city: e.target.value })}
+                                        placeholder="City"
+                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', color: '#475569' }}
+                                    />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Country</label>
-                                    <div style={{ fontSize: '1rem', color: '#475569' }}>{selectedBusiness?.country || 'N/A'}</div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Country</label>
+                                    <input
+                                        type="text"
+                                        value={selectedBusiness?.country || ''}
+                                        onChange={(e) => setSelectedBusiness({ ...selectedBusiness, country: e.target.value })}
+                                        placeholder="Country"
+                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', color: '#475569' }}
+                                    />
                                 </div>
                             </div>
                         </div>
