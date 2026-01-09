@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from "../dashboard.module.css";
 
@@ -10,7 +10,7 @@ const defaultTemplates = [
     { id: '3', name: 'Personalized', content: "It was a pleasure serving you today. Your feedback helps us grow. Please leave us a review here:" }
 ];
 
-export default function RequestsPage() {
+function RequestsContent() {
     const searchParams = useSearchParams();
     const businessId = searchParams.get('businessId');
     const [method, setMethod] = useState<'whatsapp' | 'sms' | 'email'>('whatsapp');
@@ -219,4 +219,20 @@ export default function RequestsPage() {
         </div>
     );
 }
+
+export default function RequestsPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+                <div className="spinner" style={{
+                    width: '32px', height: '32px', border: '3px solid var(--primary)',
+                    borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite'
+                }}></div>
+            </div>
+        }>
+            <RequestsContent />
+        </Suspense>
+    );
+}
+
 

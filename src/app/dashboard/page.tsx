@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from "./dashboard.module.css";
 
-export default function DashboardPage() {
+function DashboardContent() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -202,4 +202,17 @@ export default function DashboardPage() {
         </div>
     );
 }
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+                <div style={{ width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+            </div>
+        }>
+            <DashboardContent />
+        </Suspense>
+    );
+}
+
 

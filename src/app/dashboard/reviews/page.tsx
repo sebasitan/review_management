@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from "../dashboard.module.css";
 import AIResponseModal from "@/components/dashboard/AIResponseModal";
 import ManualReplyModal from "@/components/dashboard/ManualReplyModal";
 
-export default function ReviewsPage() {
+function ReviewsContent() {
     const searchParams = useSearchParams();
     const businessId = searchParams.get('businessId');
     const [filter, setFilter] = useState('all');
@@ -216,3 +216,19 @@ export default function ReviewsPage() {
         </div>
     );
 }
+
+export default function ReviewsPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+                <div className="spinner" style={{
+                    width: '32px', height: '32px', border: '3px solid var(--primary)',
+                    borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite'
+                }}></div>
+            </div>
+        }>
+            <ReviewsContent />
+        </Suspense>
+    );
+}
+

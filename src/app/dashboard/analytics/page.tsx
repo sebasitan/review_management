@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from "../dashboard.module.css";
 
-export default function AnalyticsPage() {
+function AnalyticsContent() {
     const searchParams = useSearchParams();
     const businessId = searchParams.get('businessId');
     const [data, setData] = useState<any>(null);
@@ -147,3 +149,16 @@ export default function AnalyticsPage() {
         </div>
     );
 }
+
+export default function AnalyticsPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+                <div className="spinner" style={{ width: '32px', height: '32px', border: '3px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+            </div>
+        }>
+            <AnalyticsContent />
+        </Suspense>
+    );
+}
+
