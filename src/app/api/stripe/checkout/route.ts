@@ -5,6 +5,8 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
+    return new NextResponse("Stripe is currently disabled", { status: 503 });
+    /*
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user?.email) {
@@ -55,4 +57,5 @@ export async function POST(req: Request) {
         console.error("[STRIPE_CHECKOUT_ERROR]", error);
         return new NextResponse(error.message || "Internal Error", { status: 500 });
     }
+    */
 }
