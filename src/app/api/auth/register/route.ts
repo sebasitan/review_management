@@ -38,6 +38,6 @@ export async function POST(req: Request) {
         });
     } catch (error: any) {
         console.error("[REGISTER_ERROR]", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
+        return new NextResponse(error.message || "Internal Server Error", { status: 500 });
     }
 }
