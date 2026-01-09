@@ -166,7 +166,7 @@ export default function AIAssistantPage() {
     return (
         <Suspense fallback={
             <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
-                <div style={{ weight: '32px', height: '32px', border: '3px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <div className="spinner" style={{ width: '32px', height: '32px', border: '3px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
             </div>
         }>
             <AIAssistantContent />
