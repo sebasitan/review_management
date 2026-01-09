@@ -72,7 +72,8 @@ export default function OnboardingPage() {
                     country: selectedBusiness.country,
                     lat: selectedBusiness.lat,
                     lng: selectedBusiness.lng,
-                    placeId: selectedBusiness.placeId
+                    placeId: selectedBusiness.placeId,
+                    googleMapUrl: selectedBusiness.googleMapUrl
                 }),
             });
 
@@ -206,6 +207,16 @@ export default function OnboardingPage() {
                                         style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', color: '#475569' }}
                                     />
                                 </div>
+                            </div>
+                            <div style={{ marginTop: '16px' }}>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Google Maps Link (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={selectedBusiness?.googleMapUrl || ''}
+                                    onChange={(e) => setSelectedBusiness({ ...selectedBusiness, googleMapUrl: e.target.value })}
+                                    placeholder="Paste your business Google Maps link here"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', color: '#475569' }}
+                                />
                             </div>
                         </div>
 

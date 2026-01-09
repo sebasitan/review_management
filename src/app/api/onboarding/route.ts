@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { businessName, address, city, country, lat, lng, placeId } = body;
+        const { businessName, address, city, country, lat, lng, placeId, googleMapUrl } = body;
 
         console.log("[ONBOARDING_DEBUG] Received payload:", { businessName, address, city, country, lat, lng, placeId });
 
@@ -33,6 +33,15 @@ export async function POST(req: Request) {
         // No longer cleaning up old businesses to allow multiple
 
 
+        // Helper to extract place ID from URL if provided
+        let googlePlaceId = placeId?.toString() || null;
+        if (googleMapUrl) {
+            const pidMatch = googleMapUrl.match(/(?:place_id:|place\/)([a-zA-Z0-9_-]+)/);
+            if (pidMatch && pidMatch[1]) {
+                googlePlaceId = pidMatch[1];
+            }
+        }
+
         // 1. Create the business profile
         const business = await prisma.business.create({
             data: {
@@ -43,7 +52,7 @@ export async function POST(req: Request) {
                 country: country || "Unknown",
                 lat: parseFloat(lat.toString()),
                 lng: parseFloat(lng.toString()),
-                placeId: placeId?.toString() || null,
+                placeId: googlePlaceId,
             },
         });
 
