@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { reviewContent, tone = "Professional", authorName = "Customer" } = await req.json();
+        const { reviewContent, tone = "Professional", authorName = "Customer", businessId } = await req.json();
 
         if (!reviewContent) {
             return new NextResponse("Review content is required", { status: 400 });
@@ -26,7 +26,9 @@ export async function POST(req: Request) {
             return new NextResponse("Business not found", { status: 404 });
         }
 
-        const business = user.businesses[0];
+        const business = businessId
+            ? user.businesses.find(b => b.id === businessId) || user.businesses[0]
+            : user.businesses[0];
 
         // Simulate AI processing delay
         await new Promise(resolve => setTimeout(resolve, 1500));

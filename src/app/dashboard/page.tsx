@@ -2,20 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from "./dashboard.module.css";
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const businessId = searchParams.get('businessId');
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
+            setLoading(true);
             try {
-                const res = await fetch('/api/stats');
+                const url = businessId ? `/api/stats?businessId=${businessId}` : '/api/stats';
+                const res = await fetch(url);
                 const result = await res.json();
                 setData(result);
             } catch (error) {
@@ -28,7 +32,7 @@ export default function DashboardPage() {
         if (status === 'authenticated') {
             fetchDashboardData();
         }
-    }, [status]);
+    }, [status, businessId]);
 
     if (loading) return (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>

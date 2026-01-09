@@ -1,7 +1,8 @@
 import { NextAuthOptions } from "next-auth";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
@@ -20,13 +21,44 @@ export const authOptions: NextAuthOptions = {
                 },
             },
         }),
+        CredentialsProvider({
+            name: "credentials",
+            credentials: {
+                email: { label: "Email", type: "text" },
+                password: { label: "Password", type: "password" }
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) {
+                    throw new Error("Invalid credentials");
+                }
+
+                const user = await prisma.user.findUnique({
+                    where: { email: credentials.email }
+                });
+
+                if (!user || !user.password) {
+                    throw new Error("Invalid credentials");
+                }
+
+                const isCorrectPassword = await bcrypt.compare(
+                    credentials.password,
+                    user.password
+                );
+
+                if (!isCorrectPassword) {
+                    throw new Error("Invalid credentials");
+                }
+
+                return user;
+            }
+        })
     ],
     callbacks: {
         async signIn({ user, account }) {
             if (!user.email || !account) return false;
 
             try {
-                // 1. Handle User
+                // 1. Handle User (Only for social, credentials handles it in authorize)
                 let dbUser = await prisma.user.findUnique({
                     where: { email: user.email }
                 });
@@ -41,35 +73,37 @@ export const authOptions: NextAuthOptions = {
                     });
                 }
 
-                // 2. Handle Account (Manual Token Storage)
-                await prisma.account.upsert({
-                    where: {
-                        provider_providerAccountId: {
+                // 2. Handle Account (Manual Token Storage) - Skip for credentials
+                if (account.provider !== 'credentials') {
+                    await prisma.account.upsert({
+                        where: {
+                            provider_providerAccountId: {
+                                provider: account.provider,
+                                providerAccountId: account.providerAccountId,
+                            },
+                        },
+                        update: {
+                            access_token: account.access_token,
+                            refresh_token: account.refresh_token,
+                            expires_at: account.expires_at,
+                            scope: account.scope,
+                        },
+                        create: {
+                            userId: dbUser.id,
+                            type: account.type,
                             provider: account.provider,
                             providerAccountId: account.providerAccountId,
+                            access_token: account.access_token,
+                            refresh_token: account.refresh_token,
+                            expires_at: account.expires_at,
+                            token_type: account.token_type,
+                            scope: account.scope,
+                            id_token: account.id_token,
                         },
-                    },
-                    update: {
-                        access_token: account.access_token,
-                        refresh_token: account.refresh_token,
-                        expires_at: account.expires_at,
-                        scope: account.scope,
-                    },
-                    create: {
-                        userId: dbUser.id,
-                        type: account.type,
-                        provider: account.provider,
-                        providerAccountId: account.providerAccountId,
-                        access_token: account.access_token,
-                        refresh_token: account.refresh_token,
-                        expires_at: account.expires_at,
-                        token_type: account.token_type,
-                        scope: account.scope,
-                        id_token: account.id_token,
-                    },
-                });
+                    });
+                    console.log("MANUAL_SIGNIN_TOKEN_SAVED", user.email);
+                }
 
-                console.log("MANUAL_SIGNIN_TOKEN_SAVED", user.email);
                 return true;
             } catch (error) {
                 console.error("MANUAL_SIGNIN_ERROR:", error);

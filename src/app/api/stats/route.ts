@@ -3,12 +3,15 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user?.email) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const { searchParams } = new URL(req.url);
+    const businessId = searchParams.get('businessId');
 
     try {
         const user = await prisma.user.findUnique({
@@ -30,7 +33,9 @@ export async function GET() {
             });
         }
 
-        const business = user.businesses[0];
+        const business = businessId
+            ? user.businesses.find(b => b.id === businessId) || user.businesses[0]
+            : user.businesses[0];
         const requests = business.reviewRequests;
 
         // Channel Breakdown

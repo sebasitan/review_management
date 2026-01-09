@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from "../dashboard.module.css";
 
 export default function AIAssistantPage() {
+    const searchParams = useSearchParams();
+    const businessId = searchParams.get('businessId');
     const [reviewText, setReviewText] = useState('');
     const [authorName, setAuthorName] = useState('');
     const [tone, setTone] = useState('Professional');
@@ -21,7 +24,12 @@ export default function AIAssistantPage() {
             const res = await fetch('/api/ai/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reviewContent: reviewText, tone, authorName: authorName || 'Customer' })
+                body: JSON.stringify({
+                    reviewContent: reviewText,
+                    tone,
+                    authorName: authorName || 'Customer',
+                    businessId
+                })
             });
 
             if (res.ok) {

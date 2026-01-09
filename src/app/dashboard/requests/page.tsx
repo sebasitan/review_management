@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from "../dashboard.module.css";
 
 const templates = [
@@ -10,6 +11,8 @@ const templates = [
 ];
 
 export default function RequestsPage() {
+    const searchParams = useSearchParams();
+    const businessId = searchParams.get('businessId');
     const [method, setMethod] = useState<'whatsapp' | 'sms' | 'email'>('whatsapp');
     const [selectedTemplate, setSelectedTemplate] = useState(templates[0]);
     const [recipient, setRecipient] = useState('');
@@ -18,12 +21,13 @@ export default function RequestsPage() {
     const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
     useEffect(() => {
-        fetch('/api/stats')
+        const url = businessId ? `/api/stats?businessId=${businessId}` : '/api/stats';
+        fetch(url)
             .then(res => res.json())
             .then(data => {
                 if (data.hasBusiness) setBusinessData(data.business);
             });
-    }, []);
+    }, [businessId]);
 
     const getReviewLink = () => {
         if (!businessData) return '';
@@ -47,7 +51,8 @@ export default function RequestsPage() {
                 body: JSON.stringify({
                     recipient,
                     method,
-                    content: fullMessage
+                    content: fullMessage,
+                    businessId
                 })
             });
 

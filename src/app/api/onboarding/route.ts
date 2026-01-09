@@ -30,19 +30,8 @@ export async function POST(req: Request) {
             return new NextResponse("User not found", { status: 404 });
         }
 
-        // 0. Cleanup old businesses (Fresh Start)
-        const existingBusinesses = await prisma.business.findMany({
-            where: { ownerId: user.id },
-            select: { id: true }
-        });
+        // No longer cleaning up old businesses to allow multiple
 
-        if (existingBusinesses.length > 0) {
-            const businessIds = existingBusinesses.map((b: { id: string }) => b.id);
-            await prisma.reviewRequest.deleteMany({ where: { businessId: { in: businessIds } } });
-            await prisma.analyticsEvent.deleteMany({ where: { businessId: { in: businessIds } } });
-            await prisma.reviewDraft.deleteMany({ where: { businessId: { in: businessIds } } });
-            await prisma.business.deleteMany({ where: { id: { in: businessIds } } });
-        }
 
         // 1. Create the business profile
         const business = await prisma.business.create({

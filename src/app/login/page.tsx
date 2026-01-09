@@ -1,23 +1,119 @@
 "use client";
 
+import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
 
 export default function LoginPage() {
+    const [isRegister, setIsRegister] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [name, setName] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+
     const handleGoogleSignIn = () => {
         signIn("google", { callbackUrl: "/dashboard" });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+
+        if (isRegister) {
+            try {
+                const res = await fetch("/api/auth/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password, name }),
+                });
+
+                if (res.ok) {
+                    const result = await signIn("credentials", {
+                        email,
+                        password,
+                        redirect: false,
+                    });
+
+                    if (result?.error) {
+                        setError("Account created, but could not sign in. Please try manually.");
+                    } else {
+                        router.push("/onboarding");
+                    }
+                } else {
+                    const data = await res.text();
+                    setError(data || "Registration failed");
+                }
+            } catch (err) {
+                setError("Something went wrong");
+            }
+        } else {
+            const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+            });
+
+            if (result?.error) {
+                setError("Invalid email or password");
+            } else {
+                router.push("/dashboard");
+            }
+        }
+        setLoading(false);
     };
 
     return (
         <div className={styles.container}>
             <div className={`${styles.loginCard} glass`}>
                 <div className={`${styles.logo} gradient-text`}>ReputaAI</div>
-                <h1 className={styles.title}>Welcome back!</h1>
+                <h1 className={styles.title}>{isRegister ? "Create Account" : "Welcome back!"}</h1>
                 <p className={styles.subtitle}>
-                    Sign in to your account and manage your reputation effortlessly.
+                    {isRegister
+                        ? "Join thousands of businesses managing their reputation with AI."
+                        : "Sign in to your account and manage your reputation effortlessly."}
                 </p>
 
-                <button className={styles.googleButton} onClick={handleGoogleSignIn}>
+                {error && <div style={{ color: 'var(--error)', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>{error}</div>}
+
+                <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {isRegister && (
+                        <input
+                            type="text"
+                            placeholder="Full Name"
+                            className={styles.input}
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                    )}
+                    <input
+                        type="email"
+                        placeholder="Email Address"
+                        className={styles.input}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        className={styles.input}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <button type="submit" className={styles.submitButton} disabled={loading}>
+                        {loading ? "Processing..." : (isRegister ? "Sign Up" : "Sign In")}
+                    </button>
+                </form>
+
+                <div className={styles.divider}>or</div>
+
+                <button className={styles.googleButton} onClick={handleGoogleSignIn} type="button">
                     <svg className={styles.googleIcon} viewBox="0 0 24 24">
                         <path
                             fill="#4285F4"
@@ -39,11 +135,17 @@ export default function LoginPage() {
                     Continue with Google
                 </button>
 
-                <div className={styles.divider}>or</div>
-
                 <p className={styles.footer}>
-                    Don&apos;t have an account? <span className={styles.link} onClick={handleGoogleSignIn} style={{ cursor: 'pointer', color: 'var(--primary)', fontWeight: 600 }}>Get Started</span>
+                    {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
+                    <span
+                        className={styles.link}
+                        onClick={() => setIsRegister(!isRegister)}
+                        style={{ cursor: 'pointer', color: 'var(--primary)', fontWeight: 600 }}
+                    >
+                        {isRegister ? "Sign In" : "Get Started"}
+                    </span>
                 </p>
+
                 <p style={{ marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     By clicking continue, you agree to our <br />
                     <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>

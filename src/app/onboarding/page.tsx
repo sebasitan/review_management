@@ -13,6 +13,7 @@ export default function OnboardingPage() {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
     const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
+    const [createdBusinessId, setCreatedBusinessId] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -76,6 +77,8 @@ export default function OnboardingPage() {
             });
 
             if (res.ok) {
+                const data = await res.json();
+                setCreatedBusinessId(data.business.id);
                 setStep(3);
             } else {
                 alert('Failed to save business profile. Please try again.');
@@ -251,7 +254,7 @@ export default function OnboardingPage() {
 
 
                         <button
-                            onClick={() => router.push('/dashboard')}
+                            onClick={() => router.push(createdBusinessId ? `/dashboard?businessId=${createdBusinessId}` : '/dashboard')}
                             style={{ width: '100%', padding: '18px', borderRadius: '16px', fontWeight: 700, fontSize: '1.2rem', background: '#6366f1', color: 'white', border: 'none', cursor: 'pointer' }}
                         >
                             Open Dashboard
@@ -276,4 +279,3 @@ export default function OnboardingPage() {
         </div>
     );
 }
-

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import styles from "../../app/landing.module.css";
 
 export default function LandingNav() {
     return (

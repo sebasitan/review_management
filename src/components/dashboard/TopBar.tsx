@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import styles from '@/app/dashboard/dashboard.module.css';
 
 const mockNotifications = [
@@ -17,9 +17,15 @@ export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     const [showNotifs, setShowNotifs] = useState(false);
     const [unreadCount, setUnreadCount] = useState(1);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showBusinessMenu, setShowBusinessMenu] = useState(false);
+    const [businesses, setBusinesses] = useState<any[]>([]);
+    const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
     const notifRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
+    const businessMenuRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -30,10 +36,46 @@ export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
                 setShowUserMenu(false);
             }
+            if (businessMenuRef.current && !businessMenuRef.current.contains(event.target as Node)) {
+                setShowBusinessMenu(false);
+            }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        const fetchBusinesses = async () => {
+            try {
+                const res = await fetch('/api/businesses');
+                const data = await res.json();
+                setBusinesses(data);
+
+                const bId = searchParams.get('businessId');
+                if (bId) {
+                    const selected = data.find((b: any) => b.id === bId);
+                    if (selected) setSelectedBusiness(selected);
+                    else if (data.length > 0) setSelectedBusiness(data[0]);
+                } else if (data.length > 0) {
+                    setSelectedBusiness(data[0]);
+                }
+            } catch (err) {
+                console.error("Failed to fetch businesses", err);
+            }
+        };
+
+        if (session) {
+            fetchBusinesses();
+        }
+    }, [session, searchParams]);
+
+    const handleBusinessSelect = (business: any) => {
+        setSelectedBusiness(business);
+        setShowBusinessMenu(false);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('businessId', business.id);
+        router.push(`${pathname}?${params.toString()}`);
+    };
 
     // Get Title based on pathname
     const getPageTitle = () => {
@@ -62,7 +104,62 @@ export default function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </button>
 
             {/* Dynamic Breadcrumb / Title */}
-            <h2 className={styles.topBarTitle}>{getPageTitle()}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <h2 className={styles.topBarTitle}>{getPageTitle()}</h2>
+
+                {selectedBusiness && (
+                    <div style={{ position: 'relative' }} ref={businessMenuRef}>
+                        <button
+                            onClick={() => setShowBusinessMenu(!showBusinessMenu)}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)',
+                                border: '1px solid rgba(99, 102, 241, 0.2)', padding: '6px 12px',
+                                borderRadius: '12px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                            }}
+                        >
+                            🏢 {selectedBusiness.name} ▾
+                        </button>
+
+                        {showBusinessMenu && (
+                            <div className="glass" style={{
+                                position: 'absolute', top: '100%', left: '0', marginTop: '8px', width: '240px',
+                                padding: '8px', borderRadius: '16px', background: 'var(--card-bg)',
+                                boxShadow: '0 10px 40px rgba(0,0,0,0.1)', zIndex: 100
+                            }}>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '8px 12px' }}>SWITCH PLACE</p>
+                                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                    {businesses.map(b => (
+                                        <button
+                                            key={b.id}
+                                            onClick={() => handleBusinessSelect(b)}
+                                            style={{
+                                                width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: '8px',
+                                                fontSize: '0.9rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px',
+                                                background: b.id === selectedBusiness.id ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                                color: b.id === selectedBusiness.id ? 'var(--primary)' : 'var(--text-primary)'
+                                            }}
+                                        >
+                                            {b.name}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div style={{ borderTop: '1px solid var(--card-border)', marginTop: '8px', paddingTop: '8px' }}>
+                                    <button
+                                        onClick={() => router.push('/onboarding')}
+                                        style={{
+                                            width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: '8px',
+                                            fontSize: '0.9rem', fontWeight: 600, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px'
+                                        }}
+                                    >
+                                        ➕ Add New Place
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {/* Right Actions */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginLeft: 'auto' }}>

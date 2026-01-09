@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { recipient, method, content } = await req.json();
+        const { recipient, method, content, businessId } = await req.json();
 
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
@@ -23,7 +23,9 @@ export async function POST(req: Request) {
             return new NextResponse("Business profile not found", { status: 404 });
         }
 
-        const business = user.businesses[0];
+        const business = businessId
+            ? user.businesses.find(b => b.id === businessId) || user.businesses[0]
+            : user.businesses[0];
 
         // Map method string to Channel enum
         let channel: Channel = Channel.EMAIL;
