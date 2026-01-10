@@ -251,30 +251,73 @@ function ReviewsInbox() {
                                 <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '24px' }}>
                                     {replyingTo === rev.reviewId ? (
                                         <div style={{ animation: 'fadeIn 0.2s ease' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>CRAFT YOUR RESPONSE</div>
+                                                <button
+                                                    onClick={async () => {
+                                                        const res = await fetch('/api/ai/generate', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                reviewContent: rev.comment || "Review without comment",
+                                                                authorName: rev.reviewerName,
+                                                                businessId
+                                                            })
+                                                        });
+                                                        const data = await res.json();
+                                                        setReplyText(data.response);
+                                                    }}
+                                                    className={styles.secondaryBtn}
+                                                    style={{ padding: '4px 12px', fontSize: '0.8rem', borderColor: '#8b5cf6', color: '#8b5cf6', background: '#f5f3ff' }}
+                                                >
+                                                    ✨ Generate AI Draft
+                                                </button>
+                                            </div>
+
                                             <textarea
                                                 value={replyText}
-                                                onChange={(e) => setReplyText(e.target.value)}
+                                                onChange={(e) => setReplyText(e.target.value.slice(0, 4000))}
                                                 placeholder="Craft your professional response here..."
                                                 style={{
                                                     width: '100%', padding: '16px', borderRadius: '16px',
-                                                    border: '1px solid #e2e8f0', minHeight: '120px',
-                                                    marginBottom: '16px', fontSize: '0.95rem', background: '#fafafa',
-                                                    fontFamily: 'inherit'
+                                                    border: '1px solid #e2e8f0', minHeight: '140px',
+                                                    marginBottom: '8px', fontSize: '1rem', background: '#fafafa',
+                                                    fontFamily: 'inherit', resize: 'vertical'
                                                 }}
                                             />
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                                    💡 Keep it professional and helpful. Respect Google Guidelines.
+                                                </div>
+                                                <div style={{ fontSize: '0.75rem', color: replyText.length > 3500 ? '#ef4444' : '#94a3b8', fontWeight: 600 }}>
+                                                    {replyText.length} / 4000
+                                                </div>
+                                            </div>
+
+                                            <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', padding: '12px 16px', borderRadius: '12px', marginBottom: '20px', fontSize: '0.85rem', color: '#92400e' }}>
+                                                ⚠️ <strong>Important:</strong> Replies are published directly to Google Maps and cannot be edited here once posted.
+                                            </div>
+
                                             <div style={{ display: 'flex', gap: '12px' }}>
                                                 <button
-                                                    onClick={() => handlePostReply(rev.reviewId)}
+                                                    onClick={() => {
+                                                        if (replyText.trim()) {
+                                                            if (window.confirm("Are you sure you want to publish this reply to Google? \n\nThis action cannot be undone here.")) {
+                                                                handlePostReply(rev.reviewId);
+                                                            }
+                                                        }
+                                                    }}
                                                     disabled={isPostingReply || !replyText.trim()}
                                                     className={styles.primaryBtn}
-                                                    style={{ background: '#6366f1', padding: '10px 24px' }}
+                                                    style={{ background: '#6366f1', padding: '12px 28px', fontSize: '1rem' }}
                                                 >
-                                                    {isPostingReply ? 'Posting...' : 'Post Reply to Google'}
+                                                    {isPostingReply ? 'Publishing...' : 'Confirm & Publish to Google'}
                                                 </button>
                                                 <button
                                                     onClick={() => { setReplyingTo(null); setReplyText(''); }}
                                                     className={styles.secondaryBtn}
-                                                    style={{ padding: '10px 24px' }}
+                                                    style={{ padding: '12px 28px', fontSize: '1rem' }}
                                                 >
                                                     Cancel
                                                 </button>
@@ -282,11 +325,14 @@ function ReviewsInbox() {
                                         </div>
                                     ) : (
                                         <button
-                                            onClick={() => setReplyingTo(rev.reviewId)}
+                                            onClick={() => {
+                                                setReplyingTo(rev.reviewId);
+                                                setReplyText('');
+                                            }}
                                             className={styles.secondaryBtn}
                                             style={{
                                                 color: '#6366f1', borderColor: '#e0e7ff', background: '#f5f7ff',
-                                                fontWeight: 700, padding: '10px 24px', width: 'fit-content'
+                                                fontWeight: 700, padding: '12px 28px', width: 'fit-content'
                                             }}
                                         >
                                             ✍️ Write a Reply
