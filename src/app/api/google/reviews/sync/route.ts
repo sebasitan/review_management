@@ -62,6 +62,7 @@ export async function POST(req: Request) {
                     rating: mapRating(rev.starRating),
                     comment: rev.comment,
                     reply: rev.reviewReply?.comment,
+                    replied: !!rev.reviewReply?.comment,
                     createdAt: new Date(rev.createTime),
                 },
                 create: {
@@ -71,6 +72,7 @@ export async function POST(req: Request) {
                     rating: mapRating(rev.starRating),
                     comment: rev.comment,
                     reply: rev.reviewReply?.comment,
+                    replied: !!rev.reviewReply?.comment,
                     createdAt: new Date(rev.createTime),
                 }
             });

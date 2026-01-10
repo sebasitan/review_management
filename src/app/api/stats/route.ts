@@ -22,6 +22,7 @@ export async function GET(req: Request) {
                         reviewRequests: true,
                         analytics: true,
                         reviews: true,
+                        googleReviews: true
                     }
                 }
             }
@@ -38,6 +39,7 @@ export async function GET(req: Request) {
             ? user.businesses.find((b: any) => b.id === businessId) || user.businesses[0]
             : user.businesses[0];
         const requests = business.reviewRequests;
+        const gReviewsCount = business.googleReviews.length;
 
         // Channel Breakdown
         const channelBreakdown = requests.reduce((acc: any, req: { channel: string }) => {
@@ -50,6 +52,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json({
             hasBusiness: true,
+            plan: user.plan,
             business: {
                 id: business.id,
                 name: business.name,
@@ -64,6 +67,7 @@ export async function GET(req: Request) {
             stats: {
                 totalRequests: requests.length,
                 totalEngagement: totalEvents,
+                totalGoogleReviews: gReviewsCount,
                 channels: channelBreakdown
             }
         });

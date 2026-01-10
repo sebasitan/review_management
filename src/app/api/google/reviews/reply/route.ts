@@ -75,6 +75,7 @@ export async function POST(req: Request) {
             where: { reviewId },
             data: {
                 reply: comment,
+                replied: true,
                 repliedAt: new Date()
             }
         });

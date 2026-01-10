@@ -66,6 +66,7 @@ model GoogleReview {
   rating        Int
   comment       String?  @db.Text
   reply         String?  @db.Text
+  replied       Boolean  @default(false)
   createdAt     DateTime
   repliedAt     DateTime?
 }
