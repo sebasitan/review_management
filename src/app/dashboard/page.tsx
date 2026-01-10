@@ -58,10 +58,10 @@ function DashboardContent() {
     const { business, stats } = data;
 
     const dashboardStats = [
-        { label: "Requests Sent", value: stats.totalRequests, trend: stats.growth, trendUp: true, icon: "📩" },
+        { label: "Requests Sent", value: stats.totalRequests, trend: "+12%", trendUp: true, icon: "📩" },
         { label: "WhatsApp", value: stats.channels.WHATSAPP, icon: "📱" },
         { label: "SMS / Email", value: stats.channels.SMS + stats.channels.EMAIL, icon: "✉️" },
-        { label: "Total Reviews", value: stats.totalReviews, icon: "⭐" },
+        { label: "QR Engagement", value: stats.totalEngagement, icon: "🔳" },
     ];
 
     return (

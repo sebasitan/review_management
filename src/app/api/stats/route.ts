@@ -64,9 +64,7 @@ export async function GET(req: Request) {
             stats: {
                 totalRequests: requests.length,
                 totalEngagement: totalEvents,
-                totalReviews: business.reviews.length,
-                channels: channelBreakdown,
-                growth: business.reviews.length > 0 ? "+15%" : "0%"
+                channels: channelBreakdown
             }
         });
     } catch (error) {
