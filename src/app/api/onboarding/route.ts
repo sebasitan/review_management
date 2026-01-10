@@ -12,13 +12,26 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { businessName, address, city, country, lat, lng, placeId, googleMapUrl } = body;
+        const { businessName, address, city, country, lat, lng, placeId, source, googleMapUrl } = body;
 
-        console.log("[ONBOARDING_DEBUG] Received payload:", { businessName, address, city, country, lat, lng, placeId });
+        console.log("[ONBOARDING_DEBUG] Received payload:", { businessName, address, city, country, lat, lng, placeId, source });
 
+        // STRICT VALIDATION: Enforce required fields
         if (!businessName || !address || lat == null || lng == null) {
             console.error("[ONBOARDING_ERROR] Missing required fields");
-            return new NextResponse("Required business details are missing", { status: 400 });
+            return NextResponse.json(
+                { error: "Required business details are missing (name, address, lat, lng)" },
+                { status: 400 }
+            );
+        }
+
+        // COMPLIANCE: Ensure data source is Geoapify (Google-safe)
+        if (source !== 'geoapify') {
+            console.error("[ONBOARDING_ERROR] Invalid data source:", source);
+            return NextResponse.json(
+                { error: "Business data must come from Geoapify autocomplete only" },
+                { status: 400 }
+            );
         }
 
         const user = await prisma.user.findUnique({
@@ -27,22 +40,27 @@ export async function POST(req: Request) {
 
         if (!user) {
             console.error("[ONBOARDING_ERROR] User not found for email:", session.user.email);
-            return new NextResponse("User not found", { status: 404 });
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // No longer cleaning up old businesses to allow multiple
+        // Check for duplicate business
+        const existingBusiness = await prisma.business.findFirst({
+            where: {
+                ownerId: user.id,
+                name: businessName,
+                address: address,
+            },
+        });
 
-
-        // Helper to extract place ID from URL if provided
-        let googlePlaceId = placeId?.toString() || null;
-        if (googleMapUrl) {
-            const pidMatch = googleMapUrl.match(/(?:place_id:|place\/)([a-zA-Z0-9_-]+)/);
-            if (pidMatch && pidMatch[1]) {
-                googlePlaceId = pidMatch[1];
-            }
+        if (existingBusiness) {
+            console.log("[ONBOARDING_WARNING] Business already exists:", existingBusiness.id);
+            return NextResponse.json(
+                { error: "This business already exists in your profile", business: existingBusiness },
+                { status: 409 }
+            );
         }
 
-        // 1. Create the business profile
+        // Create the business profile
         const business = await prisma.business.create({
             data: {
                 name: businessName,
@@ -52,14 +70,19 @@ export async function POST(req: Request) {
                 country: country || "Unknown",
                 lat: parseFloat(lat.toString()),
                 lng: parseFloat(lng.toString()),
-                placeId: googlePlaceId,
+                placeId: placeId?.toString() || null,
             },
         });
+
+        console.log("[ONBOARDING_SUCCESS] Business created:", business.id);
 
         return NextResponse.json({ success: true, business });
     } catch (error: any) {
         console.error("[ONBOARDING_POST_ERROR]", error.message || error);
-        return new NextResponse(`Internal Error: ${error.message || 'Unknown issue'}`, { status: 500 });
+        return NextResponse.json(
+            { error: `Internal Error: ${error.message || 'Unknown issue'}` },
+            { status: 500 }
+        );
     }
 
 }

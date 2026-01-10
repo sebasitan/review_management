@@ -4,6 +4,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendAlert } from "@/lib/notifications";
 
+/**
+ * GOOGLE-SAFE COMPLIANCE: Reviews API
+ * This endpoint DOES NOT fetch external reviews from Google or any platform.
+ * It only returns an empty array to maintain compliance with Google's policies.
+ * Reviews are managed directly on Google Maps.
+ */
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
 
@@ -11,22 +17,9 @@ export async function GET(req: Request) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const businessId = searchParams.get('businessId');
-
-    if (!businessId) {
-        return NextResponse.json([]);
-    }
-
-    try {
-        const reviews = await prisma.review.findMany({
-            where: { businessId },
-            orderBy: { date: 'desc' }
-        });
-        return NextResponse.json(reviews);
-    } catch (error) {
-        return new NextResponse("Internal Error", { status: 500 });
-    }
+    // COMPLIANCE: Return empty array - no external review fetching
+    // Reviews are managed on Google Maps, not fetched or displayed here
+    return NextResponse.json([]);
 }
 
 export async function POST(req: Request) {

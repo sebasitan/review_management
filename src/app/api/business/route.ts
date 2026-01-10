@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user?.email) {
@@ -12,6 +12,32 @@ export async function GET() {
     }
 
     try {
+        const { searchParams } = new URL(req.url);
+        const businessId = searchParams.get('id');
+
+        // If specific business ID requested
+        if (businessId) {
+            const business = await prisma.business.findUnique({
+                where: { id: businessId }
+            });
+
+            if (!business) {
+                return NextResponse.json({ error: "Business not found" }, { status: 404 });
+            }
+
+            // Verify ownership
+            const user = await prisma.user.findUnique({
+                where: { email: session.user.email },
+            });
+
+            if (business.ownerId !== user?.id) {
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            }
+
+            return NextResponse.json(business);
+        }
+
+        // Otherwise, return first business for user
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
             include: {
