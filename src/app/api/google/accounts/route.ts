@@ -4,23 +4,20 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { decrypt } from '@/lib/encryption';
 
-export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url);
-    const accountName = searchParams.get('accountName'); // formatted as accounts/{accountId}
+export async function GET() {
     const session = await getServerSession(authOptions);
-
-    if (!session || !accountName) return new NextResponse("Bad Request", { status: 400 });
+    if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
     const googleAccount = await prisma.googleAccount.findFirst({
         where: { userId: (session.user as any).id },
         orderBy: { connectedAt: 'desc' }
     });
 
-    if (!googleAccount) return new NextResponse("Not Connected", { status: 404 });
+    if (!googleAccount) return NextResponse.json({ accounts: [] });
 
     const token = decrypt(googleAccount.accessToken);
 
-    const res = await fetch(`https://mybusinessbusinessinformation.googleapis.com/v1/${accountName}/locations?readMask=name,title,storefrontAddress`, {
+    const res = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
         headers: { Authorization: `Bearer ${token}` }
     });
 

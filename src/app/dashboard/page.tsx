@@ -122,12 +122,16 @@ function DashboardContent() {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                        <Link href="/dashboard/requests" style={{ textDecoration: 'none' }}>
+                        <Link href="/dashboard/reviews" style={{ textDecoration: 'none' }}>
                             <div className="glass" style={{ padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', height: '100%', transition: 'all 0.2s' }}>
-                                <div style={{ fontSize: '2rem', marginBottom: '16px' }}>📣</div>
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>Request Reviews</h3>
-                                <p style={{ color: '#64748b', fontSize: '0.875rem', lineHeight: 1.5 }}>Generate WhatsApp, SMS, and Email templates to send to your customers.</p>
-                                <div style={{ marginTop: '20px', color: '#6366f1', fontWeight: 600, fontSize: '0.9rem' }}>Open Tools →</div>
+                                <div style={{ fontSize: '2rem', marginBottom: '16px' }}>⭐</div>
+                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>Google Reviews</h3>
+                                <p style={{ color: '#64748b', fontSize: '0.875rem', lineHeight: 1.5 }}>
+                                    {data.plan === 'FREE' ? 'Unlock real Google review management with PRO.' : 'View, manage, and reply to your real Google reviews.'}
+                                </p>
+                                <div style={{ marginTop: '20px', color: '#6366f1', fontWeight: 600, fontSize: '0.9rem' }}>
+                                    {data.plan === 'FREE' ? 'Upgrade Plan →' : 'Manage Reviews →'}
+                                </div>
                             </div>
                         </Link>
 
@@ -141,16 +145,29 @@ function DashboardContent() {
                         </Link>
                     </div>
 
-                    <div style={{ marginTop: '20px' }}>
-                        <div className="glass" style={{ padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '20px' }}>
-                            <div style={{ fontSize: '2rem' }}>🖨️</div>
-                            <div style={{ flex: 1 }}>
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '4px' }}>Print QR Code</h3>
-                                <p style={{ color: '#64748b', fontSize: '0.875rem' }}>Place this on your counter or table for easy Google reviews.</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px', marginTop: '20px' }}>
+                        <Link href="/dashboard/requests" style={{ textDecoration: 'none' }}>
+                            <div className="glass" style={{ padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                <div style={{ fontSize: '2rem' }}>📣</div>
+                                <div style={{ flex: 1 }}>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '4px' }}>Request Reviews</h3>
+                                    <p style={{ color: '#64748b', fontSize: '0.875rem' }}>Send WhatsApp, SMS, and Email templates to your customers.</p>
+                                </div>
+                                <div style={{ color: '#6366f1', fontWeight: 600 }}>Open →</div>
                             </div>
-                            <button className={styles.primaryBtn} style={{ background: '#6366f1' }}>Download QR</button>
+                        </Link>
+
+                        <div className="glass" style={{ padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', background: data.plan === 'PRO' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(0,0,0,0.02)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ fontSize: '1.25rem' }}>{data.plan === 'PRO' ? '✅' : '🔒'}</div>
+                                <div>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Google Sync</div>
+                                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{data.plan === 'PRO' ? 'Automatic (Every 6h)' : 'Pro Only'}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                 </section>
 
                 <section className={`${styles.statCard} glass`} style={{ height: 'fit-content' }}>

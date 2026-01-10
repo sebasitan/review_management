@@ -36,6 +36,7 @@ export default function DashboardLayout({
 
     const navItems = [
         { name: 'Overview', href: '/dashboard', icon: '📊' },
+        { name: 'Google Reviews', href: '/dashboard/reviews', icon: '⭐' },
         { name: 'AI Assistant', href: '/dashboard/ai-assistant', icon: '🤖' },
         { name: 'Review Requests', href: '/dashboard/requests', icon: '📩' },
         { name: 'Analytics', href: '/dashboard/analytics', icon: '📈' },

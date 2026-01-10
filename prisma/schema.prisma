@@ -21,8 +21,53 @@ model User {
   sessions      Session[]
   businesses    Business[]
   role          String    @default("USER")
+  plan          Plan      @default(FREE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  googleAccounts GoogleAccount[]
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+model GoogleAccount {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleAccountId String   // The Google Account ID from the API
+  accessToken     String   @db.Text
+  refreshToken    String   @db.Text
+  connectedAt     DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  locations       GoogleLocation[]
+}
+
+model GoogleLocation {
+  id              String   @id @default(cuid())
+  businessId      String   @unique
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  googleAccountId String   // ID from Google
+  locationId      String   // ID from Google
+  locationName    String
+  accountId       String   // ID of the GoogleAccount model above
+  account         GoogleAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model GoogleReview {
+  id            String   @id @default(cuid())
+  reviewId      String   @unique // Google's review ID
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  reviewerName  String
+  rating        Int
+  comment       String?  @db.Text
+  reply         String?  @db.Text
+  createdAt     DateTime
+  repliedAt     DateTime?
 }
 
 model Account {
@@ -71,6 +116,10 @@ model Business {
   reviewRequests ReviewRequest[]
   analytics     AnalyticsEvent[]
 
+  // GBP Integration
+  googleLocation GoogleLocation?
+  googleReviews  GoogleReview[]
+
   // AI Drafts (Local only)
   reviewTemplates ReviewTemplate[]
   automationRules AutomationRule[]
@@ -79,6 +128,7 @@ model Business {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
+
 
 model ReviewRequest {
   id          String   @id @default(cuid())
